@@ -1,0 +1,12 @@
+version: '3'
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        NODE_ENV: production
+    env_file: .env
+    entrypoint: ["yarn", "run", "start"]
+    ports:
+      - "8000:80"

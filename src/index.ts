@@ -7,7 +7,7 @@ import BackupInfo, { ShowBackupInfo } from './models/backupInfo';
 const managerDataService = new ManagerDataService(environment.dbConnectionString!);
 
 const app = express();
-app.use(cors({ origin: 'http:localhost:8000' }));
+app.use(cors({ origin: environment.serverUrl }));
 app.use(express.json());
 
 const auth: RequestHandler = (req, res, next) => {

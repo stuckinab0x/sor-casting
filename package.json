@@ -4,7 +4,8 @@
   "private": "true",
   "scripts": {
     "start": "ts-node -T src/index.ts",
-    "start:dev": "ts-node-dev --poll --respawn src/index",
+    "start:dev": "ts-node-dev --poll --respawn -s src/index",
+    "start:docker": "docker-compose up",
     "build": "tsc"
   },
   "dependencies": {
