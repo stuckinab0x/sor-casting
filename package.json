@@ -4,7 +4,8 @@
   "private": "true",
   "scripts": {
     "start": "ts-node -T src/index.ts",
-    "start:dev": "ts-node-dev --poll --respawn src/index"
+    "start:dev": "ts-node-dev --poll --respawn src/index",
+    "build": "tsc"
   },
   "dependencies": {
     "@tsconfig/node18": "^18.2.2",
