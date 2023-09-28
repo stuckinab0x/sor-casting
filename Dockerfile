@@ -4,6 +4,7 @@ ENV NODE_ENV $NODE_ENV
 RUN apk add yarn
 WORKDIR app
 COPY package.json yarn.lock tsconfig.json ./
+COPY src/ src/
 RUN yarn --pure-lockfile
 
 FROM alpine:3.15
