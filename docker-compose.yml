@@ -5,8 +5,8 @@ services:
       dockerfile: Dockerfile
       context: .
       args:
-        NODE_ENV: production
+        NODE_ENV: development
     env_file: .env
-    entrypoint: ["yarn", "run", "start"]
+    entrypoint: ["yarn", "run", "start:dev"]
     ports:
       - "8000:80"

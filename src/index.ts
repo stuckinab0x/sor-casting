@@ -17,6 +17,7 @@ const auth: RequestHandler = (req, res, next) => {
 }
 
 app.get('/', async (req, res) => {
+  console.log('heartbeat')
   res.status(200);
   res.end();
 });
