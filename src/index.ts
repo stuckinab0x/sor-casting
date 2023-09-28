@@ -16,9 +16,14 @@ const auth: RequestHandler = (req, res, next) => {
   return next();
 }
 
+app.get('/', async (req, res) => {
+  res.status(200);
+  res.end();
+});
+
 app.use(auth);
 
-app.get('/', async (req, res) => {
+app.get('/api/backups', async (req, res) => {
   const allData = await managerDataService.getAllBackups()
   const data: BackupInfo[] = allData.map(x => {
     const showsData: ShowBackupInfo[] = x.shows.map(show => ({ name: show.name, noOfRehearsals: show.rehearsals.length }));
@@ -31,7 +36,7 @@ app.get('/', async (req, res) => {
   return res.end();
 })
 
-app.get('/:backupName', async (req, res) => {
+app.get('/api/backups/:backupName', async (req, res) => {
   const backup = await managerDataService.getBackup(req.params.backupName);
 
   if (!backup) {
@@ -43,14 +48,14 @@ app.get('/:backupName', async (req, res) => {
   res.end();
 })
 
-app.post('/', async (req, res) => {
+app.post('/api/backups', async (req, res) => {
   managerDataService.saveData(req.body);
 
   res.status(204);
   return res.end();
 })
 
-app.delete('/:backupName', async (req, res) => {
+app.delete('/api/backups/:backupName', async (req, res) => {
   await managerDataService.deleteBackup(req.params.backupName);
 
   res.status(200);
