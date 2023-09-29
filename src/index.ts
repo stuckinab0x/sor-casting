@@ -16,15 +16,15 @@ app.get('/', async (req, res) => {
 });
 
 // app.use(cors({ origin: environment.serverUrl }));
-app.use(express.json());
+// app.use(express.json());
 
-const auth: RequestHandler = (req, res, next) => {
-  if (req.headers.authorization !== environment.apiKey)
-    return res.status(401);
-  return next();
-}
+// const auth: RequestHandler = (req, res, next) => {
+//   if (req.headers.authorization !== environment.apiKey)
+//     return res.status(401);
+//   return next();
+// }
 
-app.use(auth);
+// app.use(auth);
 
 app.get('/api/backups', async (req, res) => {
   // const allData = await managerDataService.getAllBackups()
