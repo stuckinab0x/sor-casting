@@ -1,5 +1,4 @@
-import express, { RequestHandler } from 'express';
-import cors from 'cors';
+import express from 'express';
 import environment from './environment';
 import { ManagerDataService } from './manager-data-service';
 import BackupInfo, { ShowBackupInfo } from './models/backupInfo';
@@ -9,13 +8,10 @@ const managerDataService = new ManagerDataService(environment.dbConnectionString
 const app = express();
 
 app.get('/', async (req, res) => {
-  console.log('heartbeat')
-  res.send('hi')
   res.status(200);
   res.end();
 });
 
-// app.use(cors({ origin: environment.serverUrl }));
 app.use(express.json());
 
 app.use((req, res, next) => {
