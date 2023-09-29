@@ -18,13 +18,12 @@ app.get('/', async (req, res) => {
 // app.use(cors({ origin: environment.serverUrl }));
 app.use(express.json());
 
-// const auth: RequestHandler = (req, res, next) => {
-//   if (req.headers.authorization !== environment.apiKey)
-//     return res.status(401);
-//   return next();
-// }
-
-// app.use(auth);
+app.use((req, res, next) => {
+  if (req.headers.authorization === environment.apiKey)
+    return next();
+  res.status(401);
+  res.end();
+})
 
 app.get('/api/backups', async (req, res) => {
   const allData = await managerDataService.getAllBackups()
@@ -36,7 +35,7 @@ app.get('/api/backups', async (req, res) => {
 
   res.send(data);
   res.status(204);
-  return res.end();
+  res.end();
 })
 
 app.get('/api/backups/:backupName', async (req, res) => {
