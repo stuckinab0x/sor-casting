@@ -15,7 +15,7 @@ app.get('/', async (req, res) => {
   res.end();
 });
 
-app.use(cors({ origin: environment.serverUrl }));
+// app.use(cors({ origin: environment.serverUrl }));
 app.use(express.json());
 
 const auth: RequestHandler = (req, res, next) => {
