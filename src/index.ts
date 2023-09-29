@@ -10,6 +10,7 @@ const app = express();
 
 app.get('/', async (req, res) => {
   console.log('heartbeat')
+  res.send('hi')
   res.status(200);
   res.end();
 });
