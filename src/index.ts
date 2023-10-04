@@ -2,17 +2,17 @@ import express from 'express';
 import environment from './environment';
 import { ManagerDataService } from './manager-data-service';
 import BackupInfo, { ShowBackupInfo } from './models/backupInfo';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const managerDataService = new ManagerDataService(environment.dbConnectionString!);
 
 const app = express();
-
-app.get('/', async (req, res) => {
-  res.status(200);
-  res.end();
-});
+const serveStatic = express.static('src/public', { extensions: ['html'] });
 
 app.use(express.json());
+
+if (environment.environment === 'production') app.use(serveStatic)
+else app.use('/', createProxyMiddleware({ target: 'http://frontend:5173', changeOrigin: true }));
 
 app.use((req, res, next) => {
   if (req.headers.authorization === environment.apiKey)
@@ -59,7 +59,7 @@ app.delete('/api/backups/:backupName', async (req, res) => {
 
   res.status(200);
   res.end();
-})
+});
 
 app.listen(environment.port, () => {
   console.log(`server listening on ${ environment.port }`)

@@ -7,6 +7,19 @@ services:
       args:
         NODE_ENV: development
     env_file: .env
+    volumes:
+      - ./:/app
     entrypoint: ["yarn", "run", "start:dev"]
     ports:
       - "8000:80"
+
+  frontend:
+    build: 
+      dockerfile: frontend/Dockerfile
+      context: .
+    volumes:
+      - type: bind
+        source: ./frontend
+        target: /app/frontend
+    ports:
+      - "5173:5173"
