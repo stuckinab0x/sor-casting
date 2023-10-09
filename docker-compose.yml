@@ -11,7 +11,7 @@ services:
       - ./server :/app/server
     entrypoint: ["yarn", "run", "start:dev"]
     ports:
-      - "8000:80"
+      - "8050:80"
 
   frontend:
     build: 

@@ -7,8 +7,6 @@ interface ManagerDataDocument {
   shows: ShowData[];
 }
 
-
-
 export class ManagerDataService {
   protected readonly db: Promise<Db>
   protected readonly managerDataCollection: Promise<Collection<ManagerDataDocument>>;
