@@ -11,12 +11,7 @@ const WelcomeScreen: FC = () => {
         Create/Edit Shows:
       </h1>
       <ShowsList>
-        <Button>
-          <h2>Summer of Love*</h2>
-        </Button>
-        <Button>
-          <h2>Genesis*</h2>
-        </Button>
+
       </ShowsList>
       <Divider />
       <Button onClick={ () => setEditorView('newShow') }>

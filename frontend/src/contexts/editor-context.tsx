@@ -25,9 +25,12 @@ interface EditorContextProps {
   discardCastEdit: () => void;
   assignCasting: (studentName: string) => void;
   clearAndCloseCasting: () => void;
+  addStudent: (newStudent: Student) => void;
   updateStudentInfo: (studentName: string, studentInfo: StudentInfoOptions) => void;
+  deleteStudent: (studentName: string) => void;
   addSong: (songName: string, artist?: string) => void;
   renameSong: (oldName: string, newName: string, newArtist?: string) => void;
+  reorderSong: (moved: string, target: number) => void;
   deleteSong: (songName: string) => void;
   toolsMode: boolean;
   setToolsMode: (on: boolean) => void;
@@ -61,7 +64,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
 
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
-      name: showName,
+      name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,
       songs: [],
@@ -77,16 +80,19 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   const discardCastEdit = useCallback(() => setCurrentCastEdit(null), []);
 
   const unAssignCasting = useCallback(() => {
-    if (!currentEditingShow || !currentCastEdit)
+    if (!currentCastEdit)
       return;
-    const newShow = { ...currentEditingShow };
-    const student = newShow.cast.find(x => !!x.castings.find(casting => casting.inst === currentCastEdit.inst && casting.songName === currentCastEdit.songName));
-    if (student) {
-      const removedCasting = student.castings.find(x => x.inst === currentCastEdit.inst && x.songName === currentCastEdit.songName);
-      student.castings = student.castings.filter(x => x !== removedCasting);
-      setCurrentEditingShow(newShow);
-    }
-  }, [currentEditingShow, currentCastEdit]);
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const oldStudent = oldState.cast.find(x => x.castings.some(casting => casting.inst === currentCastEdit.inst && casting.songName === currentCastEdit.songName));
+      if (!oldStudent)
+        return oldState;
+      const removedCasting = oldStudent.castings.find(x => x.inst === currentCastEdit.inst && x.songName === currentCastEdit.songName);
+      const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => x !== removedCasting) };
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== oldStudent.name), newStudent] };
+    });
+  }, [currentCastEdit]);
 
   const clearAndCloseCasting = useCallback(() => {
     unAssignCasting();
@@ -94,70 +100,116 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   }, [unAssignCasting]);
 
   const assignCasting = useCallback((studentName: string) => {
-      unAssignCasting();
-    if (!currentEditingShow || !currentCastEdit)
+    unAssignCasting()
+    if (!currentCastEdit)
       return;
-    const newShow = { ...currentEditingShow };
-    const student = newShow.cast.find(x => x.name === studentName);
-    if (!student)
-      return;
-    student.castings = [...student.castings, { songName: currentCastEdit?.songName, inst: currentCastEdit?.inst }];
-    setCurrentEditingShow(newShow);
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const oldStudent = oldState.cast.find(x => x.name === studentName);
+      if (!oldStudent)
+        return oldState;
+      const newStudent: Student = { ...oldStudent, castings: [...oldStudent.castings, { songName: currentCastEdit?.songName, inst: currentCastEdit?.inst }] };
+      const newShow = { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] }
+      return newShow;
+    }) 
     setCurrentCastEdit(null);
-  }, [currentEditingShow, currentCastEdit, unAssignCasting]);
+  }, [currentCastEdit, unAssignCasting]);
+
+  const addStudent = useCallback((newStudent: Student) => {
+    if (currentEditingShow?.cast.some(x => x.name === newStudent.name))
+      return;
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      return { ...oldState, cast: [...oldState.cast, newStudent]};
+    })
+  }, [currentEditingShow]);
 
   const updateStudentInfo = useCallback((studentName: string, studentInfo: StudentInfoOptions) => {
-    if (!currentEditingShow)
-      return;
-    const newShow = { ...currentEditingShow };
-    const student = newShow.cast.find(x => x.name === studentName);
-    if (!student)
-      return;
-    student.name = studentInfo.name;
-    student.lesson = studentInfo.lesson;
-    student.main = studentInfo.main;   
-    setCurrentEditingShow(newShow);
-  }, [currentEditingShow])
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const oldStudent = oldState.cast.find(x => x.name === studentName);
+      if (!oldStudent)
+        return oldState;
+      const newStudent: Student = { ...oldStudent, name: studentInfo.name, lesson: studentInfo.lesson, main: studentInfo.main };
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
+    })
+  }, []);
+
+  const deleteStudent = useCallback((studentName: string) => {
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      return {
+        ...oldState,
+        cast: [...oldState.cast.filter(x => x.name !== studentName)],
+      }
+    })
+  }, []);
 
   const addSong = useCallback((songName: string, artist?: string) => {
-    if (!currentEditingShow)
-      return;
-    const newShow = { ...currentEditingShow };
-    const song: Song = { name: songName };
-    if (artist)
-      song.artist = artist;
-    newShow.songs = [...newShow.songs, song];
-    setCurrentEditingShow(newShow);
-  }, [currentEditingShow]);
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const song: Song = { name: songName, artist, order: oldState.songs.length };
+      return { ...oldState, songs: [...oldState.songs, song] };
+    });
+  }, []);
 
   const renameSong = useCallback((oldName: string, newName: string, newArtist?: string) => {
-    if (!currentEditingShow)
-      return;
-    const newShow = { ...currentEditingShow };
-    const song = newShow.songs.find(x => x.name === oldName);
-    if (!song)
-      return;
-    song.name = newName;
-    if (!currentEditingShow.singleArtist)
-      song.artist = newArtist;
-    const affectedCastings = newShow.cast.reduce((prev: Casting[], curr: Student) => {
-      return [...prev, ...curr.castings.filter(x => x.songName === oldName)];
-    }, []);
-    affectedCastings.forEach(x => { x.songName = newName });
-    setCurrentEditingShow(newShow);
-  }, [currentEditingShow]);
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const affectedStudents = oldState.cast.filter(x => x.castings.some(casting => casting.songName === oldName))
+        .map(x => {
+          const affectedCastings = x.castings.filter(casting => casting.songName === oldName)
+            .map(casting => ({ songName: newName, inst: casting.inst }));
+          return { ...x, castings: [...x.castings.filter(casting => casting.songName !== oldName), ...affectedCastings] };
+        });
+      const oldSong = oldState.songs.find(x => x.name === oldName);
+      if (!oldSong)
+        return oldState;
+      return { 
+        ...oldState,
+        songs: [...oldState.songs.filter(x => x.name !== oldName), { name: newName, artist: newArtist, order: oldSong.order }],
+        cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === oldName)), ...affectedStudents],
+      };
+    })
+  }, []);
+
+  const reorderSong = useCallback((moved: string, target: number) => {
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      
+      const allSongsInOrder = [...oldState.songs].sort((a, b) => a.order - b.order);
+      const movedIndex = allSongsInOrder.findIndex(x => x.name === moved);
+      if (movedIndex === -1)
+        return oldState;
+      const newSong: Song = { ...allSongsInOrder[movedIndex] };
+      const songsWithPlaceholder = [...allSongsInOrder.slice(0, movedIndex), { ...allSongsInOrder[movedIndex], name: '$placeholder' },...allSongsInOrder.slice(movedIndex + 1)];
+      songsWithPlaceholder.splice(target, 0, newSong);
+      const orderedSongs = songsWithPlaceholder.filter(x => x.name !== '$placeholder').map((x, i) => ({ ...x, order: i }));
+      console.log(orderedSongs);
+      return { ...oldState, songs: orderedSongs };
+    })
+  }, []);
 
   const deleteSong = useCallback((songName: string) => {
-    if (!currentEditingShow)
-      return;
-    const newShow = { ...currentEditingShow };
-    const song = newShow.songs.find(x => x.name === songName);
-    if (!song)
-      return;
-    newShow.songs = newShow.songs.filter(x => x.name !== songName);
-    newShow.cast.forEach(x => x.castings = x.castings.filter(casting => casting.songName !== songName));
-    setCurrentEditingShow(newShow);
-  }, [currentEditingShow]);
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      const affectedStudents = oldState.cast.filter(x => x.castings.some(casting => casting.songName === songName))
+        .map(x => ({ ...x, castings: x.castings.filter(casting => casting.songName !== songName) }));
+      return {
+        ...oldState,
+        cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === songName)), ...affectedStudents],
+        songs: oldState.songs.filter(x => x.name !== songName),
+      };
+    })
+  }, []);
 
   const context = useMemo(() => ({
     editorView,
@@ -173,9 +225,12 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     discardCastEdit,
     assignCasting,
     clearAndCloseCasting,
+    addStudent,
     updateStudentInfo,
+    deleteStudent,
     addSong,
     renameSong,
+    reorderSong,
     deleteSong,
     toolsMode,
     setToolsMode,
@@ -195,9 +250,12 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       discardCastEdit,
       assignCasting,
       clearAndCloseCasting,
+      addStudent,
       updateStudentInfo,
+      deleteStudent,
       addSong,
       renameSong,
+      reorderSong,
       deleteSong,
       toolsMode,
       setToolsMode,

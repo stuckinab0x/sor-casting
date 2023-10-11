@@ -1,4 +1,4 @@
-import { FC, SetStateAction, useCallback, useState } from 'react';
+import { FC, SetStateAction, useCallback, useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
 import Student from '../models/student';
@@ -25,17 +25,30 @@ const NewCastView: FC = () => {
     arraySetter(oldState => [...oldState, { value: '', id: oldState.length }]);
   }, [])
 
+  const potentialCastList = useMemo(() => {
+    const guitar: Student[] = guitarInputs.map(x => ({ name: x.value.trim(), main: 'Guitar', castings: [], }));
+    const bass: Student[] = bassInputs.map(x => ({ name: x.value.trim(), main: 'Bass', castings: [], }));
+    const drums: Student[] = drumInputs.map(x => ({ name: x.value.trim(), main: 'Drums', castings: [], }));
+    const keys: Student[] = keysInputs.map(x => ({ name: x.value.trim(), main: 'Keys', castings: [], }));
+    const vox: Student[] = voxInputs.map(x => ({ name: x.value.trim(), main: 'Vocals', castings: [], }));
+    return [...guitar, ...bass, ...drums, ...keys, ...vox].filter(x => x.name);
+  }, [guitarInputs, bassInputs, drumInputs, keysInputs, voxInputs]);
+
+  const buttonText = useMemo(() => {
+    const lowerCased = potentialCastList.map(x => x.name.toLowerCase());
+    const dupes = lowerCased.length !== new Set(lowerCased).size;
+    console.log(dupes);
+    if (dupes && potentialCastList.length)
+      return 'Fix duplicate names';
+    if (newShowStatus === 'songsWereAdded')
+      return 'Next - Casting/Overview';
+    return 'Next - Add Songs'
+  }, [potentialCastList, newShowStatus]);
+
   const addCast = useCallback(() => {
     if (!currentEditingShow)
       return;
-    const newShow = { ...currentEditingShow };
-      const guitar: Student[] = guitarInputs.map(x => ({ name: x.value.trim(), main: 'Guitar', castings: [], }));
-      const bass: Student[] = bassInputs.map(x => ({ name: x.value.trim(), main: 'Bass', castings: [], }));
-      const drums: Student[] = drumInputs.map(x => ({ name: x.value.trim(), main: 'Drums', castings: [], }));
-      const keys: Student[] = keysInputs.map(x => ({ name: x.value.trim(), main: 'Keys', castings: [], }));
-      const vox: Student[] = voxInputs.map(x => ({ name: x.value.trim(), main: 'Vocals', castings: [], }));
-      newShow.cast = [...guitar, ...bass, ...drums, ...keys, ...vox].filter(x => x.name);
-    setCurrentEditingShow(newShow);
+    setCurrentEditingShow({ ...currentEditingShow, cast: potentialCastList });
     if (newShowStatus === 'songsWereAdded') {
       setEditorView('showOverview');
       setNewShowStatus(undefined);
@@ -44,7 +57,7 @@ const NewCastView: FC = () => {
       setNewShowStatus('castWasAdded');
       setEditorView('newShowSongs');
     }
-  }, [guitarInputs, bassInputs, drumInputs, keysInputs, voxInputs, currentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setCurrentEditingShow])
+  }, [potentialCastList, currentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setCurrentEditingShow])
 
   if (currentEditingShow)
     return (
@@ -110,9 +123,9 @@ const NewCastView: FC = () => {
             </h3>
           </AddButton>
         </InstrumentSection>
-        <DoneButton onClick={ addCast }>
+        <DoneButton onClick={ addCast } $disabled={ buttonText === 'Fix duplicate names' }>
           <h3>
-            Next - { newShowStatus === 'songsWereAdded' ? 'Casting/Overview' : 'Add Songs' }
+            { buttonText }
           </h3>
         </DoneButton>
       </ViewMain>
@@ -178,8 +191,13 @@ const AddButton = styled.div`
   }
 `;
 
-const DoneButton = styled(AddButton)`
+interface DoneButtonProps {
+  $disabled: boolean;
+}
+
+const DoneButton = styled(AddButton)<DoneButtonProps>`
   margin-top: 20px;
+  ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;'}
   
   > h3 {
     font-size: 30px;

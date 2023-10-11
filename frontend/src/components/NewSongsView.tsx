@@ -1,4 +1,4 @@
-import { FC, SetStateAction, useState, useCallback } from 'react';
+import { FC, SetStateAction, useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
 import InputUpdate from '../models/input-update';
@@ -18,15 +18,24 @@ const NewSongsView: FC = () => {
     });
   }, []);
 
+  const buttonText = useMemo(() => {
+    const caseTrim = songInputs.filter(x => x.value).map(x => x.value.toLowerCase().trim());
+    const dupes = caseTrim.length !== new Set(caseTrim).size;
+
+    if (dupes)
+      return 'Song list contains duplicates';
+    if (newShowStatus === 'castWasAdded')
+      return 'Next - Casting/Overview';
+    return 'Next - Add Cast Members';
+  }, [songInputs, newShowStatus]);
+
   const addSongs = useCallback(() => {
     if (!currentEditingShow)
       return;
-    let songs: Song[] = songInputs.map((x, i) => ({ name: x.value, artist: artistInputs[i].value })).filter(x => x.name);
+    let songs: Song[] = songInputs.map((x, i) => ({ name: x.value, artist: artistInputs[i].value, order: i })).filter(x => x.name);
     if (currentEditingShow.singleArtist)
-      songs = songs.map(x => ({ name: x.name }))
-    const newShow = { ...currentEditingShow };
-    newShow.songs = [...songs];
-    setCurrentEditingShow(newShow);
+      songs = songs.map((x, i) => ({ name: x.name, order: i }))
+    setCurrentEditingShow({ ...currentEditingShow, songs: [...songs] });
     if (newShowStatus === 'castWasAdded') {
       setEditorView('showOverview');
       setNewShowStatus(undefined);
@@ -64,9 +73,9 @@ const NewSongsView: FC = () => {
             More
           </h3>
         </AddButton>
-        <DoneButton onClick={ () => { addSongs(); } }>
+        <DoneButton onClick={ () => { addSongs(); } } $disabled={ buttonText === 'Song list contains duplicates' }>
           <h3>
-            Next - { newShowStatus === 'castWasAdded' ? 'Casting/Overview' : 'Add Cast Members' }
+            { buttonText }
           </h3>
         </DoneButton>
       </ViewMain>
@@ -129,8 +138,13 @@ const AddButton = styled.div`
   }
 `;
 
-const DoneButton = styled(AddButton)`
+interface DoneButtonProps {
+  $disabled: boolean;
+}
+
+const DoneButton = styled(AddButton)<DoneButtonProps>`
   margin-top: 20px;
+  ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;'}
   
   > h3 {
     font-size: 30px;

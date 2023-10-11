@@ -1,21 +1,68 @@
-import { FC, useState } from 'react';
+import { FC, useState, useCallback, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
-import { ALL_INSTRUMENTS } from '../models/student';
+import { ALL_INSTRUMENTS, MainInstrument } from '../models/student';
 import CastByInstrumentColumn from './Cast/CastByInstrumentColumn';
+import SelectorButton from './Cast/SelectorButton';
 
 const CastMemberView: FC = () => {
   const { currentEditingShow, setEditorView } = useEditor();
   const [activeEdit, setActiveEdit] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const [addingCastMember, setAddingCastMember] = useState(false);
+  const [newStudentMain, setNewStudentMain] = useState<MainInstrument>('Guitar');
   
+  const { addStudent } = useEditor();
+
+  const handleNewStudentClick = useCallback(() => {
+    addStudent({ name: nameInput, main: newStudentMain, castings: [] });
+    setAddingCastMember(false);
+    setNewStudentMain('Guitar');
+    setNameInput('');
+  }, [nameInput, newStudentMain, addStudent]);
+
+  const inputIsDupe = useMemo(() => {
+    if (!currentEditingShow)
+      return false;
+    return currentEditingShow.cast.some(x => x.name.toLowerCase() === nameInput.toLowerCase())
+  }, [currentEditingShow, nameInput]);
+
   if (currentEditingShow)
   return (
     <ViewMain>
       <h2>{ currentEditingShow.name }:  Manage Cast Members</h2>
-      <Button onClick={ () => setEditorView('showOverview') }>
-        <h2>Return to Show Overview</h2>
-      </Button>
-      <div>{ ALL_INSTRUMENTS.map(x => <CastByInstrumentColumn key={ x } activeEdit={ activeEdit } setActiveEdit={ setActiveEdit } twoPmStart={ currentEditingShow.twoPmRehearsal } instrument={ x } castMembers={ currentEditingShow.cast.filter(student => student.main === x) } />) }</div>
+      { addingCastMember ? 
+      <>
+        <NameInput value={ nameInput } onChange={ event => setNameInput(event.currentTarget.value) } placeholder='enter a student name' />
+        <Selector>
+          <div>
+            { ALL_INSTRUMENTS.map(x => <SelectorButton key={ x } select={ () => setNewStudentMain(x) } value={ x } active={ newStudentMain === x } />) }
+          </div>
+        </Selector>
+        <Button onClick={ () => { setAddingCastMember(false); setNameInput('') } }>
+          <h2>Discard</h2>
+        </Button>
+        { nameInput && <AddButton onClick={ handleNewStudentClick } $disabled={ inputIsDupe }>
+          <h2>
+            { inputIsDupe ? 'Duplicate student name detected' : 'Add' }
+          </h2>
+        </AddButton> }
+      </>
+      : 
+      <>
+        <Row>
+          <AddButton onClick={ () => setAddingCastMember(true) }>
+              <h2>New Cast Member</h2>
+            </AddButton>
+          <Button onClick={ () => setEditorView('showOverview') }>
+            <h2>Return to Show Overview</h2>
+          </Button>
+        </Row>
+        <div>
+          { ALL_INSTRUMENTS.map(x => <CastByInstrumentColumn key={ x } activeEdit={ activeEdit } setActiveEdit={ setActiveEdit } twoPmStart={ currentEditingShow.twoPmRehearsal } instrument={ x } castMembers={ currentEditingShow.cast.filter(student => student.main === x) } />) }
+        </div>
+      </>
+      }
     </ViewMain>
   )
 }
@@ -37,14 +84,19 @@ const ViewMain = styled.div`
   }
 `;
 
+const Row = styled.div`
+  display: flex;
+`;
+
 const Button = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1;
   background-color: ${ props => props.theme.colors.bgInner2 };
   border-radius: 4px;
-  padding: 4px;
-  margin: 14px 0px;
+  padding: 4px 10px;
+  margin: 7px;
   cursor: pointer;
   box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.5);
 
@@ -52,5 +104,41 @@ const Button = styled.div`
     ${ h2 }
   }
 `
+
+interface AddButtonProps {
+  $disabled: boolean;
+}
+
+const AddButton = styled(Button)<AddButtonProps>`
+  background-color: orange;
+
+  ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;' }
+`;
+
+const NameInput = styled.input`
+  color: white;
+  border: none;
+  border-radius: 2px;
+  margin: 2px;
+  padding: 5px 10px;
+  min-height: 25px;
+  background-color: ${ props => props.theme.colors.bgInner3 };
+  outline: none;
+  font-size: 1.3rem;
+`;
+
+const Selector = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  > div {
+    display: flex;
+    background-color: ${ props => props.theme.colors.bgInner3 };
+    margin: 6px 4px;
+    padding: 4px 2px;
+    border-radius: 4px;
+  }
+`;
 
 export default CastMemberView;

@@ -13,25 +13,35 @@ interface CastMemberProps {
 }
 
 const CastMember: FC<CastMemberProps> = ({ student, twoPmStart, activeEdit, setActiveEdit }) => {
-  const { updateStudentInfo } = useEditor();
+  const { updateStudentInfo, deleteStudent } = useEditor();
   const [nameInput, setNameInput] = useState(student.name);
+  const [deleting, setDeleting] = useState(false);
 
   const handleNameConfirm = useCallback(() => {
     updateStudentInfo(student.name, { name: nameInput, lesson: student.lesson, main: student.main  });
     setActiveEdit(null);
   }, [updateStudentInfo, nameInput, student, setActiveEdit]);
 
+  const handleDeleteConfirm = useCallback(() => {
+    if (!activeEdit)
+      return;
+    deleteStudent(activeEdit)
+    setActiveEdit(null);
+    setDeleting(false);
+  }, [setActiveEdit, deleteStudent, activeEdit]);
+
   return (
     <CastMemberMain $disabled={ !!activeEdit && activeEdit !== student.name }>
       { activeEdit !== student.name && <>
         <div>
           <span className='material-symbols-outlined' onClick={ () => setActiveEdit(student.name) }>edit</span>
+          <span className='material-symbols-outlined' onClick={ () => { setActiveEdit(student.name); setDeleting(true) } }>delete</span>
           <h3>{ student.name }</h3>
         </div>
         <LessonSelector student={ student } twoPmStart={ twoPmStart } />
         <MainSelector student={ student } />
       </> }
-      { activeEdit === student.name && <>
+      { activeEdit === student.name && !deleting && <>
         <ConfirmButton onClick={ handleNameConfirm }>
           <h3>Confirm</h3>
         </ConfirmButton>
@@ -40,6 +50,16 @@ const CastMember: FC<CastMemberProps> = ({ student, twoPmStart, activeEdit, setA
           <h3>Discard Changes</h3>
         </ActionButton>
       </> }
+      { activeEdit === student.name && deleting && <>
+        <ConfirmButton onClick={ handleDeleteConfirm }>
+          <h3>Remove</h3>
+        </ConfirmButton>
+        <h3>Remove { student.name } from cast?</h3>
+        <ActionButton onClick={ () => { setActiveEdit(null); setDeleting(false); } }>
+          <h3>Cancel</h3>
+        </ActionButton>
+      </>
+      }
     </CastMemberMain>
   )
 }
@@ -60,6 +80,10 @@ const CastMemberMain = styled.div<CastMemberMainProps>`
   ${ props => props.$disabled && 'pointer-events: none;' }
   ${ props => props.$disabled && 'opacity: 0.5;' }
 
+  > h3 {
+    margin: 0;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  }
 
   > div {
     display: flex;
@@ -74,7 +98,6 @@ const CastMemberMain = styled.div<CastMemberMainProps>`
     > h3 {
       color: white;
       margin: 0 8px 0 4px;
-      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
     }
   }
 `;

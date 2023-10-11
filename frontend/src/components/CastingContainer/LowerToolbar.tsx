@@ -1,4 +1,4 @@
-import { FC, useState, useCallback } from 'react';
+import { FC, useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../../contexts/editor-context';
 
@@ -19,11 +19,17 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
     setArtistInput('');
   }, [nameInput, artistInput, addSong, currentEditingShow, setAddingSong]);
 
+  const nameIsDupe = useMemo(() => {
+    return currentEditingShow?.songs.some(x => x.name.toLowerCase() === nameInput.toLowerCase());
+  }, [currentEditingShow, nameInput]);
+
   if (currentEditingShow)
     return (
       <ToolbarMain>
-        <Button $disabled={ addingSong && !nameInput } onClick={ () => addingSong ? handleAddSongClick() : setAddingSong(true) }>
-          <h3>{ addingSong ? 'Save and Add Song' : 'Add Song' }</h3>
+        <Button $disabled={ addingSong && (!nameInput || nameIsDupe) } onClick={ () => addingSong ? handleAddSongClick() : setAddingSong(true) }>
+          { nameIsDupe ? <h3>Song already exists</h3>
+          : <h3>{ addingSong ? 'Save and Add Song' : 'Add Song' }</h3>
+          }
         </Button>
         { !addingSong
           && <Button onClick ={ () => setEditorView('editCast') }>
@@ -34,7 +40,7 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
           && <>
             <NameInput value={ nameInput } placeholder='&nbsp;enter a song name' onChange={ event => setNameInput(event.currentTarget.value) } />
             { !currentEditingShow?.singleArtist && <NameInput value={ artistInput } onChange={ event => setArtistInput(event.currentTarget.value) } placeholder='&nbsp;enter an artist name' /> }
-            <DiscardButton onClick={ () => setAddingSong(false) }>
+            <DiscardButton onClick={ () => setAddingSong(false) } $disabled={ nameIsDupe }>
               <h3>Discard</h3>
             </DiscardButton>
           </>
