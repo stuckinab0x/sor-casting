@@ -16,6 +16,7 @@ interface SongCastingRowProps {
 
 const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit, currentDragging, setCurrentDragging }) => {
   const { currentEditingShow, setCastEdit, toolsMode, renameSong, deleteSong, reorderSong } = useEditor();
+  
   const [editingName, setEditingName] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [nameInput, setNameInput] = useState(song.name);

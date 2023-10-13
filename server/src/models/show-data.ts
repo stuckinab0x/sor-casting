@@ -1,13 +1,19 @@
-export default interface ShowData {
+export interface ShowData {
   name: string;
+  singleArtist: boolean;
+  twoPmRehearsal: boolean;
   songs: Song[];
   cast: CastMember[];
+}
+
+export default interface Show extends ShowData {
   rehearsals: Rehearsal[];
 }
 
 interface Song {
   name: string;
-  artist: string;
+  artist?: string;
+  order: number;
 }
 
 interface Casting {
@@ -22,7 +28,7 @@ interface CastMember {
   lesson: string;
 }
 
-interface Rehearsal {
+export interface Rehearsal {
   date: string;
   absent: Absence[];
   wereRun: string[];

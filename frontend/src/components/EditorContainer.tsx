@@ -7,12 +7,14 @@ import NewSongsView from './NewSongsView';
 import ShowOverview from './ShowOverview';
 import WelcomeScreen from './WelcomeScreen';
 import CastMemberView from './CastMemberView';
+import ProfilesView from './ProfilesView';
 
 const EditorContainer: FC = () => {
   const { editorView } = useEditor();
   
   return (
   <ContainerMain>
+    { editorView === 'profiles' && <ProfilesView /> }
     { editorView === 'welcome' && <WelcomeScreen /> }
     { editorView === 'newShow' && <NewShowView /> }
     { editorView === 'newShowCast' && <NewCastView /> }

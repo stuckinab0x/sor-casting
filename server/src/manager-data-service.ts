@@ -1,14 +1,20 @@
 import { Db, MongoClient, Collection, ObjectId } from 'mongodb';
-import ShowData from './models/show-data';
+import Show, { Rehearsal, ShowData } from './models/show-data';
 
 interface ManagerDataDocument {
+  profileName: string;
+  lastModified: Date;
+  shows: Show[];
+}
+
+interface ManagerConfigDocument {
   name: string;
-  created: string;
-  shows: ShowData[];
+  currentProfile: string;
 }
 
 export class ManagerDataService {
   protected readonly db: Promise<Db>
+  protected readonly managerConfigCollection: Promise<Collection<ManagerConfigDocument>>;
   protected readonly managerDataCollection: Promise<Collection<ManagerDataDocument>>;
 
   constructor(connectionUri: string) {
@@ -17,30 +23,77 @@ export class ManagerDataService {
 
     this.db = new MongoClient(connectionUri).connect().then(client => client.db('manager-data'));
 
+    this.managerConfigCollection = this.db.then(db => db.collection('manager-config'));
     this.managerDataCollection = this.db.then(db => db.collection('manager-data'));
   }
 
-  async getAllBackups(): Promise<ManagerDataDocument[]> {
+  async addProfile(profileName:string): Promise<void> {
     const collection = await this.managerDataCollection;
-    
-    return collection
+    await collection.updateOne({ profileName }, { $setOnInsert: { profileName, lastModified: new Date(), shows: [] } }, { upsert: true });
+  }
+
+  async getCurrentProfileName(): Promise<string> {
+    const collection = await this.managerConfigCollection;
+    const config = await collection.findOne({ name: 'config' }, { projection: { currentProfile: 1 }});
+    return config?.currentProfile || '';
+  }
+
+  async setConfig(profileName: string): Promise<void> {
+    const configCollection = await this.managerConfigCollection;
+    await configCollection.updateOne({ name: 'config' }, { $set: { currentProfile: profileName } }, { upsert: true });
+    await this.addProfile(profileName);
+  }
+
+  async getAllProfileNames(): Promise<string[]> {
+    const collection = await this.managerDataCollection;
+    const all = await collection
       .find({}, { collation: { locale: 'en' }})
-      .toArray();
+      .toArray()
+    return all.map(x => x.profileName);
   }
 
-  async getBackup(backupName: string): Promise<ManagerDataDocument | null> {
+  async getShowNames(profileName: string): Promise<string[]> {
     const collection = await this.managerDataCollection;
-    const backup = await collection.findOne({ name: backupName })
-    return backup;
+    const profileData = await collection.findOne({ profileName })
+    return profileData.shows.map(x => x.name);
   }
 
-  async saveData(data: ManagerDataDocument): Promise<void> {
+  async getShow(profileName: string, showName: string): Promise<Show> {
     const collection = await this.managerDataCollection;
-    await collection.insertOne({ _id: new ObjectId(), name: data.name, created: new Date().toISOString(), shows: data.shows });
+    const profileData = await collection.findOne({ profileName })
+    return profileData.shows.find(x => x.name === showName);
   }
 
-  async deleteBackup(backupName: string): Promise<void> {
+  async addNewShow(profileName: string, showData: ShowData) {
     const collection = await this.managerDataCollection;
-    const result = await collection.deleteOne({ name: backupName });
+    await collection.updateOne({ profileName }, { $addToSet: { shows: { ...showData, rehearsals: [] } }, $set: { lastModified: new Date() } })
+  }
+
+  async saveShowData(profileName: string, showData: ShowData) {
+    const collection = await this.managerDataCollection;
+    await collection.updateOne({ profileName, 'shows.name': showData.name },
+    { $set: { 
+      lastModified: new Date(),
+      'shows.$.name': showData.name,
+      'shows.$.singleArtist': showData.singleArtist,
+      'shows.$.twoPmRehearsal': showData.twoPmRehearsal,
+      'shows.$.songs': showData.songs,
+      'shows.$.cast': showData.cast,
+    } },
+    { upsert: true });
+  };
+
+  async saveShowWithRehearsals(profileName: string, shows: Show[]) {
+    const collection = await this.managerDataCollection;
+    await collection.updateOne({ profileName },
+    { $set: { 
+      lastModified: new Date(),
+      shows: shows,
+    } });
+  }
+
+  async getProfile(profileName: string): Promise<ManagerDataDocument> {
+    const collection = await this.managerDataCollection;
+    return await collection.findOne({ profileName });
   }
 }

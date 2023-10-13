@@ -23,3 +23,14 @@ services:
         target: /app/frontend
     ports:
       - "5173:5173"
+  
+  db:
+    image: mongo
+    volumes:
+      - db:/data/db
+      - db:/data/configdb
+    ports:
+      - "27017:27017"
+
+volumes:
+  db:

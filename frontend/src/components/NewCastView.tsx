@@ -6,7 +6,7 @@ import InputUpdate from '../models/input-update';
 import { createInputs } from '../utils';
 
 const NewCastView: FC = () => {
-  const { newShowStatus, setNewShowStatus, currentEditingShow, setCurrentEditingShow, setEditorView } = useEditor();
+  const { newShowStatus, setNewShowStatus, currentEditingShow, setCurrentEditingShow, setEditorView, setUnsavedData } = useEditor();
   const [guitarInputs, setGuitarInputs] = useState<InputUpdate[]>(createInputs(8));
   const [bassInputs, setBassInputs] = useState<InputUpdate[]>(createInputs(4));
   const [drumInputs, setDrumInputs] = useState<InputUpdate[]>(createInputs(4));
@@ -57,7 +57,8 @@ const NewCastView: FC = () => {
       setNewShowStatus('castWasAdded');
       setEditorView('newShowSongs');
     }
-  }, [potentialCastList, currentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setCurrentEditingShow])
+    setUnsavedData(true);
+  }, [potentialCastList, currentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setCurrentEditingShow, setUnsavedData])
 
   if (currentEditingShow)
     return (

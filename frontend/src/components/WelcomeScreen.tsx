@@ -1,21 +1,50 @@
-import { FC } from 'react';
+import { FC, useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
 
 const WelcomeScreen: FC = () => {
-  const { setEditorView } = useEditor();
+  const { setEditorView, setCurrentEditingShow } = useEditor();
+
+  const [showNames, setShowNames] = useState<string[] | undefined>();
+
+  useEffect(() => {
+    const requestShowNames = async () => {
+      try {
+        const res = await fetch('/api/shows');
+        const showNames: string[] = await res.json();
+          setShowNames(showNames);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    requestShowNames();
+  }, []);
+
+  const loadShowRequest = useCallback(async (showName: string) => {
+    try {
+      const res = await fetch(`/api/shows/${ showName }`);
+      const show = await res.json();
+      setCurrentEditingShow(show);
+      setEditorView('showOverview');
+    } catch (error) {
+      console.log(error);
+    }
+  }, [setCurrentEditingShow, setEditorView]);
+
 
   return (
     <ViewMain>
       <h1>
         Create/Edit Shows:
       </h1>
-      <ShowsList>
-
-      </ShowsList>
+      { showNames && <ShowsList>
+        { showNames.map(x => <Button key={ x } onClick={ () => loadShowRequest(x) }>
+          <h2>{ x }</h2>
+        </Button>) }
+      </ShowsList> }
       <Divider />
       <Button onClick={ () => setEditorView('newShow') }>
-        <h2>New Show</h2>
+        <h2>Create New Show</h2>
       </Button>
     </ViewMain>
   )
@@ -41,7 +70,7 @@ const ShowsList = styled.div`
 const Divider = styled.div`
   display: flex;
   background-color: ${ props => props.theme.colors.bgInner3 };
-  height: 30px;
+  height: 15px;
   width: 100%;
   margin: 4px 0;
   border-radius: 4px;

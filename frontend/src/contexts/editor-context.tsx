@@ -3,6 +3,7 @@ import EditorView from '../models/editor-view';
 import Show from '../models/show';
 import Student, { Casting, CastingInst, FivePMStartLesson, MainInstrument, TwoPMStartLesson } from '../models/student';
 import Song from '../models/song';
+import useProfile from '../hooks/use-profile';
 
 type NewShowStatus = 'songsWereAdded' | 'castWasAdded' | undefined;
 interface StudentInfoOptions {
@@ -12,6 +13,11 @@ interface StudentInfoOptions {
 }
 
 interface EditorContextProps {
+  profile: string | undefined;
+  setProfileRequest: (profileName: string) => void;
+  saveShowRequest: () => Promise<void>;
+  unsavedData: boolean;
+  setUnsavedData: (unsaved: boolean) => void;
   editorView: EditorView;
   setEditorView: React.Dispatch<SetStateAction<EditorView>>;
   singleArtist: boolean;
@@ -55,13 +61,33 @@ interface EditorProviderProps {
 }
 
 const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
+  const profile = useProfile();
+
+  const [unsavedData, setUnsavedData] = useState(false);
+
   const [singleArtist, setSingleArtist] = useState(false);
-  const [editorView, setEditorView] = useState<EditorView>('welcome');
+  const [editorView, setEditorView] = useState<EditorView>(profile ? 'welcome' : 'profiles');
   const [currentEditingShow, setCurrentEditingShow] = useState<Show | null>(null);
   const [newShowStatus, setNewShowStatus] = useState<NewShowStatus>();
   const [currentCastEdit, setCurrentCastEdit] = useState<Casting | null>(null);
   const [toolsMode, setToolsMode] = useState(false);
 
+  const setProfileRequest = useCallback(async (profileName: string) => {
+    await fetch(`/api/profiles/${ profileName }`, { method: 'PUT' });
+    location.reload();
+  }, []);
+
+  const saveShowRequest = useCallback(async () => {
+    const res = await fetch('/api/shows', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(currentEditingShow),
+    });
+
+    if (res.status === 200)
+      setUnsavedData(false);
+  }, [currentEditingShow]);
+  
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
       name: showName.trim(),
@@ -71,6 +97,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       cast:[],
     }
     setCurrentEditingShow(newShow);
+    setUnsavedData(true);
   }, []);
 
   const setCastEdit = useCallback((songName: string, inst: CastingInst) => {
@@ -92,11 +119,13 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => x !== removedCasting) };
       return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== oldStudent.name), newStudent] };
     });
+    setUnsavedData(true);
   }, [currentCastEdit]);
 
   const clearAndCloseCasting = useCallback(() => {
     unAssignCasting();
     setCurrentCastEdit(null);
+    setUnsavedData(true);
   }, [unAssignCasting]);
 
   const assignCasting = useCallback((studentName: string) => {
@@ -114,6 +143,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return newShow;
     }) 
     setCurrentCastEdit(null);
+    setUnsavedData(true);
   }, [currentCastEdit, unAssignCasting]);
 
   const addStudent = useCallback((newStudent: Student) => {
@@ -124,6 +154,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
         return null;
       return { ...oldState, cast: [...oldState.cast, newStudent]};
     })
+    setUnsavedData(true);
   }, [currentEditingShow]);
 
   const updateStudentInfo = useCallback((studentName: string, studentInfo: StudentInfoOptions) => {
@@ -135,7 +166,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
         return oldState;
       const newStudent: Student = { ...oldStudent, name: studentInfo.name, lesson: studentInfo.lesson, main: studentInfo.main };
       return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
-    })
+    });
+    setUnsavedData(true);
   }, []);
 
   const deleteStudent = useCallback((studentName: string) => {
@@ -146,7 +178,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
         ...oldState,
         cast: [...oldState.cast.filter(x => x.name !== studentName)],
       }
-    })
+    });
+    setUnsavedData(true);
   }, []);
 
   const addSong = useCallback((songName: string, artist?: string) => {
@@ -156,6 +189,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       const song: Song = { name: songName, artist, order: oldState.songs.length };
       return { ...oldState, songs: [...oldState.songs, song] };
     });
+    setUnsavedData(true);
   }, []);
 
   const renameSong = useCallback((oldName: string, newName: string, newArtist?: string) => {
@@ -176,7 +210,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
         songs: [...oldState.songs.filter(x => x.name !== oldName), { name: newName, artist: newArtist, order: oldSong.order }],
         cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === oldName)), ...affectedStudents],
       };
-    })
+    });
+    setUnsavedData(true);
   }, []);
 
   const reorderSong = useCallback((moved: string, target: number) => {
@@ -192,9 +227,9 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       const songsWithPlaceholder = [...allSongsInOrder.slice(0, movedIndex), { ...allSongsInOrder[movedIndex], name: '$placeholder' },...allSongsInOrder.slice(movedIndex + 1)];
       songsWithPlaceholder.splice(target, 0, newSong);
       const orderedSongs = songsWithPlaceholder.filter(x => x.name !== '$placeholder').map((x, i) => ({ ...x, order: i }));
-      console.log(orderedSongs);
       return { ...oldState, songs: orderedSongs };
-    })
+    });
+    setUnsavedData(true);
   }, []);
 
   const deleteSong = useCallback((songName: string) => {
@@ -208,10 +243,16 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
         cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === songName)), ...affectedStudents],
         songs: oldState.songs.filter(x => x.name !== songName),
       };
-    })
+    });
+    setUnsavedData(true);
   }, []);
 
   const context = useMemo(() => ({
+    profile,
+    setProfileRequest,
+    saveShowRequest,
+    unsavedData,
+    setUnsavedData,
     editorView,
     setEditorView,
     singleArtist,
@@ -237,6 +278,11 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     initializeShow,
   }),
     [
+      profile,
+      setProfileRequest,
+      saveShowRequest,
+      unsavedData,
+      setUnsavedData,
       editorView,
       setEditorView,
       singleArtist,

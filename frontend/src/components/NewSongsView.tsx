@@ -6,7 +6,7 @@ import { createInputs } from '../utils';
 import Song from '../models/song';
 
 const NewSongsView: FC = () => {
-  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow, setEditorView } = useEditor();
+  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow, setEditorView, setUnsavedData } = useEditor();
   const [songInputs, setSongInputs] = useState<InputUpdate[]>(createInputs(20));
   const [artistInputs, setArtistInputs] = useState<InputUpdate[]>(createInputs(20));
 
@@ -44,7 +44,8 @@ const NewSongsView: FC = () => {
       setNewShowStatus('songsWereAdded');
       setEditorView('newShowCast');
     }
-  }, [songInputs, artistInputs, currentEditingShow, setCurrentEditingShow, newShowStatus, setNewShowStatus, setEditorView]);
+    setUnsavedData(true);
+  }, [songInputs, artistInputs, currentEditingShow, setCurrentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setUnsavedData]);
 
   const addAnotherInput = useCallback(() => {
     setSongInputs(oldState => [...oldState, { value: '', id: oldState.length }]);
