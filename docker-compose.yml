@@ -2,11 +2,35 @@ version: '3'
 services:
   server:
     build:
-      dockerfile: Dockerfile
+      dockerfile: server/Dockerfile
       context: .
       args:
         NODE_ENV: development
-    env_file: .env
+    env_file: server/.env
+    volumes:
+      - ./server :/app/server
     entrypoint: ["yarn", "run", "start:dev"]
     ports:
-      - "8000:80"
+      - "8050:80"
+
+  frontend:
+    build: 
+      dockerfile: frontend/Dockerfile
+      context: .
+    volumes:
+      - type: bind
+        source: ./frontend
+        target: /app/frontend
+    ports:
+      - "5173:5173"
+  
+  db:
+    image: mongo
+    volumes:
+      - db:/data/db
+      - db:/data/configdb
+    ports:
+      - "27017:27017"
+
+volumes:
+  db:

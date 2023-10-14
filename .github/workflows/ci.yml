@@ -19,7 +19,11 @@ jobs:
           cache: yarn
       - name: Install dependencies
         run: yarn --frozen-lockfile
-      - name: build
+      - name: Build server
+        working-directory: server
+        run: yarn run build
+      - name: Build frontend
+        working-directory: frontend
         run: yarn run build
 
   deploy:
