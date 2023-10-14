@@ -7,7 +7,12 @@ COPY package.json yarn.lock tsconfig.json .eslintrc.json ./
 WORKDIR server
 COPY server/package.json ./
 COPY server/src/ src/
+WORKDIR ../frontend
+COPY frontend/package.json frontend/tsconfig.json ./
+COPY frontend/src/ src/
+COPY frontend/public/ public/
 RUN yarn --pure-lockfile
+RUN if [ "$NODE_ENV" = "production" ] ; then set -e; yarn run build ; mv dist ../server/src/public ; rm -rf ../frontend ; fi
 
 FROM alpine:3.15
 ARG NODE_ENV=production

@@ -5,6 +5,7 @@ import CastingButton from './CastingButton';
 import { ALL_CAST_INST, CastingInst } from '../../models/student';
 import { useEditor } from '../../contexts/editor-context';
 import SongDragDropArea from './SongsDragDropArea';
+import tileColors from '../../tile-color';
 
 interface SongCastingRowProps {
   song: Song;
@@ -72,6 +73,7 @@ const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit
       /> }
       <div>
         <SongDisplay
+          tileColor={ tileColors[song.order] }
           $green={ editingName }
           $red={ deleting }
           draggable={ toolsMode && !editingName && !deleting }
@@ -137,6 +139,7 @@ const RowMain = styled.div<RowProps>`
 `;
 
 interface SongDisplayProps {
+  tileColor: string;
   $green: boolean;
   $red: boolean;
   $toolsMode: boolean;
@@ -145,7 +148,7 @@ interface SongDisplayProps {
 const SongDisplay = styled.div<SongDisplayProps>`
   display: flex;
   justify-content: space-between;
-  background-color: orange;
+  background-color: ${ props => props.tileColor };
   background-color: ${ props => props.$green && props.theme.colors.bgGreen };
   background-color: ${ props => props.$red && props.theme.colors.bgRed };
   padding: 5px 10px;
