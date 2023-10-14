@@ -42,4 +42,4 @@ jobs:
         with:
           push: true
           tags: stuckinabox/rehearsal-manager:latest
-          file: Dockerfile
+          file: server/Dockerfile
