@@ -29,6 +29,8 @@ const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit
   const [dragHover, setDragHover] = useState(false);
 
   const hidden = useMemo(() => {
+    if (!prefs)
+      return null;
     const hidden: CastingInst[] = [];
     if (prefs.hideGuitar3)
       hidden.push('gtr3');
@@ -77,6 +79,7 @@ const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit
     setCurrentDragging(null);
   }, [reorderSong, song.name, song.order, currentDragging, setCurrentDragging]);
 
+  if (hidden)
   return (
     <RowMain $disabled={ disabled }>
       { toolsMode && <SongDragDropArea 
