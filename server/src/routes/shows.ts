@@ -38,6 +38,7 @@ function showsRouter(managerDataService: ManagerDataService) {
       name: showData.name,
       singleArtist: showData.singleArtist,
       twoPmRehearsal: showData.twoPmRehearsal,
+      setSplitIndex: showData.setSplitIndex,
       songs: showData.songs,
       cast: showData.cast,
     });

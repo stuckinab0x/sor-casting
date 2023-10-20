@@ -1,9 +1,9 @@
 import { FC, useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { useEditor } from '../contexts/editor-context';
+import { useProfile } from '../contexts/profile-context';
 
 const ProfilesView: FC = () => {
-  const { profile, setProfileRequest } = useEditor();
+  const { profile, setProfileRequest } = useProfile();
 
   const [input, setInput] = useState('');
   const [creatingNew, setCreatingNew] = useState(false);

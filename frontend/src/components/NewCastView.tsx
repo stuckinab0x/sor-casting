@@ -4,9 +4,14 @@ import { useEditor } from '../contexts/editor-context';
 import Student from '../models/student';
 import InputUpdate from '../models/input-update';
 import { createInputs } from '../utils';
+import { useProfile } from '../contexts/profile-context';
+import { useViews } from '../contexts/views-context';
 
 const NewCastView: FC = () => {
-  const { newShowStatus, setNewShowStatus, currentEditingShow, setCurrentEditingShow, setEditorView, setUnsavedData } = useEditor();
+  const { setUnsavedData } = useProfile();
+  const { setEditorView } = useViews();
+  const { newShowStatus, setNewShowStatus, currentEditingShow, setCurrentEditingShow } = useEditor();
+
   const [guitarInputs, setGuitarInputs] = useState<InputUpdate[]>(createInputs(8));
   const [bassInputs, setBassInputs] = useState<InputUpdate[]>(createInputs(4));
   const [drumInputs, setDrumInputs] = useState<InputUpdate[]>(createInputs(4));
@@ -37,7 +42,6 @@ const NewCastView: FC = () => {
   const buttonText = useMemo(() => {
     const lowerCased = potentialCastList.map(x => x.name.toLowerCase());
     const dupes = lowerCased.length !== new Set(lowerCased).size;
-    console.log(dupes);
     if (dupes && potentialCastList.length)
       return 'Fix duplicate names';
     if (newShowStatus === 'songsWereAdded')

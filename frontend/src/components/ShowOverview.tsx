@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import MainCastingContainer from './CastingContainer/MainCastingContainer';
 import CastingPicker from './CastingContainer/CastingPicker';
 import { useEditor } from '../contexts/editor-context';
+import AllCast from './Cast/AllCast';
 
 const ShowOverview: FC = () => {
   const { currentCastEdit } = useEditor();
@@ -11,6 +12,7 @@ const ShowOverview: FC = () => {
     <OverviewMain>
       <MainCastingContainer />
       { currentCastEdit && <CastingPicker /> }
+      <AllCast />
     </OverviewMain>
   )
 }

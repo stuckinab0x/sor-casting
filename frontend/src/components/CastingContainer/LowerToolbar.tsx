@@ -1,6 +1,9 @@
 import { FC, useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../../contexts/editor-context';
+import Prefs from '../../models/prefs';
+import { useProfile } from '../../contexts/profile-context';
+import { useViews } from '../../contexts/views-context';
 
 interface LowerToolbarProps {
   addingSong: boolean;
@@ -8,10 +11,13 @@ interface LowerToolbarProps {
 }
 
 const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
-  const { currentEditingShow, addSong, setEditorView } = useEditor();
+  const { prefs, setPrefs } = useProfile();
+  const {  setEditorView, toolsMode } = useViews();
+  const { currentEditingShow, addSong, saveSetListSplitIndex } = useEditor();
   
   const [nameInput, setNameInput] = useState('');
   const [artistInput, setArtistInput] = useState('');
+  
   const handleAddSongClick = useCallback(() => {
     currentEditingShow?.singleArtist ? addSong(nameInput) : addSong(nameInput, artistInput);
     setAddingSong(false);
@@ -23,7 +29,36 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
     return currentEditingShow?.songs.some(x => x.name.toLowerCase() === nameInput.toLowerCase());
   }, [currentEditingShow, nameInput]);
 
-  if (currentEditingShow)
+  const handlePrefsToggle = useCallback((prefName: keyof Prefs) => {
+    setPrefs(oldState => {
+      if (!oldState)
+        return null;
+      return { ...oldState, [prefName]: !oldState[prefName] };
+    })
+  }, [setPrefs]);
+
+  const handleSetSplitClick = useCallback((newSplitIndex: number) => {
+    if (newSplitIndex < 0 || (currentEditingShow && newSplitIndex > currentEditingShow.songs.length))
+      return;
+    saveSetListSplitIndex(newSplitIndex)
+  }, [currentEditingShow, saveSetListSplitIndex]);
+
+  if (toolsMode && currentEditingShow)
+    return (
+      <ToolbarMain>
+        <SetDividerText>
+          <h3>Set List Split Point: { currentEditingShow.setSplitIndex <= 0 ? 'None' : currentEditingShow?.setSplitIndex }</h3>
+        </SetDividerText>
+        <SmallButton onClick={ () => handleSetSplitClick(currentEditingShow.setSplitIndex - 1) }>
+          <span className='material-symbols-outlined'>remove</span>
+        </SmallButton>
+        <SmallButton onClick={ () => handleSetSplitClick(currentEditingShow.setSplitIndex + 1) }>
+          <span className='material-symbols-outlined'>add</span>
+        </SmallButton>
+      </ToolbarMain>
+    )
+
+  if (currentEditingShow && prefs)
     return (
       <ToolbarMain>
         <Button $disabled={ addingSong && (!nameInput || nameIsDupe) } onClick={ () => addingSong ? handleAddSongClick() : setAddingSong(true) }>
@@ -45,6 +80,18 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
             </DiscardButton>
           </>
         }
+        { !addingSong && <>
+          <Divider />
+          <SmallButton $fade={ prefs.hideGuitar3 } onClick={ () => handlePrefsToggle('hideGuitar3') }>
+            <h3>Show Guitar 3</h3>
+          </SmallButton>
+          <SmallButton $fade={ prefs.hideKeys3 } onClick={ () => handlePrefsToggle('hideKeys3') }>
+            <h3>Show Keys 3</h3>
+          </SmallButton>
+          <SmallButton $fade={ prefs.hideExtras } onClick={ () => handlePrefsToggle('hideExtras') }>
+            <h3>Show Extras</h3>
+          </SmallButton>
+        </> }
       </ToolbarMain>
     )
 }
@@ -59,6 +106,7 @@ const ToolbarMain = styled.div`
 
 interface ButtonProps {
   $disabled?: boolean;
+  $fade?: boolean;
 }
 
 const Button = styled.div<ButtonProps>`
@@ -72,7 +120,7 @@ const Button = styled.div<ButtonProps>`
   width: 250px;
   cursor: pointer;
 
-  ${ props => props.$disabled && 'opacity: 0.7;' }
+  ${ props => (props.$disabled || props.$fade) && 'opacity: 0.5;' }
   ${ props => props.$disabled && 'pointer-events: none;' }
 
   > h3 {
@@ -81,7 +129,35 @@ const Button = styled.div<ButtonProps>`
     border-radius: 2px;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
   }
+`;
+
+const SmallButton = styled(Button)`
+  width: max-content;
+
+  > span {
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-size: 24px;
+    font-weight: bold;
+  }
+`;
+
+const Divider = styled.div`
+  flex: 1;
+`;
+
+const SetDividerText = styled.div`
+  margin: 2px;
+  padding: 5px 10px;
+  min-width: 250px;
+  background-color: rgba(0, 0, 0, 0.2);
+
+  > h3 {
+    color: white;
+    margin: 0;
+  }
 `
+
 const NameInput = styled.input`
   color: white;
   border: none;

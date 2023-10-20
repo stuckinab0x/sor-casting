@@ -1,9 +1,11 @@
 import { FC, useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
+import { useViews } from '../contexts/views-context';
 
 const WelcomeScreen: FC = () => {
-  const { setEditorView, setCurrentEditingShow } = useEditor();
+  const { setEditorView } = useViews();
+  const { setCurrentEditingShow } = useEditor();
 
   const [showNames, setShowNames] = useState<string[] | undefined>();
 
@@ -24,7 +26,8 @@ const WelcomeScreen: FC = () => {
     try {
       const res = await fetch(`/api/shows/${ showName }`);
       const show = await res.json();
-      setCurrentEditingShow(show);
+      
+      setCurrentEditingShow({ ...show, setSplitIndex: Number(show.setSplitIndex) });
       setEditorView('showOverview');
     } catch (error) {
       console.log(error);

@@ -4,9 +4,14 @@ import { useEditor } from '../contexts/editor-context';
 import InputUpdate from '../models/input-update';
 import { createInputs } from '../utils';
 import Song from '../models/song';
+import { useProfile } from '../contexts/profile-context';
+import { useViews } from '../contexts/views-context';
 
 const NewSongsView: FC = () => {
-  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow, setEditorView, setUnsavedData } = useEditor();
+  const { setUnsavedData } = useProfile();
+  const { setEditorView } = useViews();
+  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow } = useEditor();
+  
   const [songInputs, setSongInputs] = useState<InputUpdate[]>(createInputs(20));
   const [artistInputs, setArtistInputs] = useState<InputUpdate[]>(createInputs(20));
 

@@ -24,5 +24,5 @@ export const instAndFullNames: [string, CastingInst][] = [
   ['Lead Vox', 'vox'],
   ['BG Vox 1', 'bgVox1'],
   ['BG Vox 2', 'bgVox2'],
-  ['BG Vox 3', 'bgVox3'],
+  ['Extras', 'bgVox3'],
 ];

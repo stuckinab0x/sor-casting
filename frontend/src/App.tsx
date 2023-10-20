@@ -2,8 +2,10 @@ import { FC } from 'react'
 import styled, { createGlobalStyle, ThemeProvider } from 'styled-components'
 import theme from './styles/Theme'
 import Nav from './components/Nav'
-import EditorContainer from './components/EditorContainer'
+import EditorView from './components/EditorView'
 import EditorProvider from './contexts/editor-context'
+import ProfileProvider from './contexts/profile-context'
+import ViewsProvider from './contexts/views-context'
 
 const GlobalStyle = createGlobalStyle`
   html, body {
@@ -28,15 +30,21 @@ const GlobalStyle = createGlobalStyle`
 const App: FC = () => {
   return (
     <ThemeProvider theme={ theme }>
-      <EditorProvider>
-        <Main>
-          <GlobalStyle />
-          <Nav />
-          <Content>
-            <EditorContainer />
-          </Content>
-        </Main>
-      </EditorProvider>
+      <ProfileProvider>
+        <ViewsProvider>
+          <EditorProvider>
+            <Main>
+              <GlobalStyle />
+              <Nav />
+              <Content>
+                <EditorContainer>
+                  <EditorView />
+                </EditorContainer>
+              </Content>
+            </Main>
+          </EditorProvider>
+        </ViewsProvider>
+      </ProfileProvider>
     </ThemeProvider>
   )
 }
@@ -52,6 +60,14 @@ const Content = styled.div`
   display: flex;
   justify-content: center;
   padding: 30px;
+`;
+
+const EditorContainer = styled.div`
+  display: flex;
+  background-color: ${ props => props.theme.colors.bgInner1 };
+  border-radius: 10px;
+  box-shadow: 4px 4px 15px 2px rgba(0, 0, 0, 0.5);
+  padding: 15px 20px;
 `;
 
 export default App

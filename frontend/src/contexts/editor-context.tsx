@@ -1,9 +1,8 @@
 import { FC, useState, createContext, useCallback, useContext, ReactNode, useMemo, SetStateAction } from 'react';
-import EditorView from '../models/editor-view';
 import Show from '../models/show';
 import Student, { Casting, CastingInst, FivePMStartLesson, MainInstrument, TwoPMStartLesson } from '../models/student';
 import Song from '../models/song';
-import useProfile from '../hooks/use-profile';
+import { useProfile } from './profile-context';
 
 type NewShowStatus = 'songsWereAdded' | 'castWasAdded' | undefined;
 interface StudentInfoOptions {
@@ -13,13 +12,6 @@ interface StudentInfoOptions {
 }
 
 interface EditorContextProps {
-  profile: string | undefined;
-  setProfileRequest: (profileName: string) => void;
-  saveShowRequest: () => Promise<void>;
-  unsavedData: boolean;
-  setUnsavedData: (unsaved: boolean) => void;
-  editorView: EditorView;
-  setEditorView: React.Dispatch<SetStateAction<EditorView>>;
   singleArtist: boolean;
   setSingleArtist: React.Dispatch<SetStateAction<boolean>>;
   currentEditingShow: Show | null;
@@ -27,6 +19,8 @@ interface EditorContextProps {
   newShowStatus: NewShowStatus;
   setNewShowStatus: React.Dispatch<SetStateAction<NewShowStatus>>;
   currentCastEdit: Casting | null;
+  highlightedStudent: string | null;
+  setHighlightedStudent: (studentName: string | null) => void;
   setCastEdit: (songName: string, inst: CastingInst) => void;
   discardCastEdit: () => void;
   assignCasting: (studentName: string) => void;
@@ -38,9 +32,8 @@ interface EditorContextProps {
   renameSong: (oldName: string, newName: string, newArtist?: string) => void;
   reorderSong: (moved: string, target: number) => void;
   deleteSong: (songName: string) => void;
-  toolsMode: boolean;
-  setToolsMode: (on: boolean) => void;
   initializeShow: (showName: string, singleArtist: boolean, startsAtTwo: boolean) => void;
+  saveSetListSplitIndex: (setSplitIndex: number) => void;
 }
 
 const EditorContext = createContext<EditorContextProps | null>(null);
@@ -61,48 +54,30 @@ interface EditorProviderProps {
 }
 
 const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
-  const profile = useProfile();
-
-  const [unsavedData, setUnsavedData] = useState(false);
-
+  const { setUnsavedData } = useProfile();
+  
   const [singleArtist, setSingleArtist] = useState(false);
-  const [editorView, setEditorView] = useState<EditorView>(profile ? 'welcome' : 'profiles');
   const [currentEditingShow, setCurrentEditingShow] = useState<Show | null>(null);
   const [newShowStatus, setNewShowStatus] = useState<NewShowStatus>();
   const [currentCastEdit, setCurrentCastEdit] = useState<Casting | null>(null);
-  const [toolsMode, setToolsMode] = useState(false);
-
-  const setProfileRequest = useCallback(async (profileName: string) => {
-    await fetch(`/api/profiles/${ profileName }`, { method: 'PUT' });
-    location.reload();
-  }, []);
-
-  const saveShowRequest = useCallback(async () => {
-    const res = await fetch('/api/shows', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentEditingShow),
-    });
-
-    if (res.status === 200)
-      setUnsavedData(false);
-  }, [currentEditingShow]);
+  const [highlightedStudent, setHighlightedStudent] = useState<string | null>(null);
   
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
       name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,
+      setSplitIndex: 0,
       songs: [],
       cast:[],
     }
     setCurrentEditingShow(newShow);
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const setCastEdit = useCallback((songName: string, inst: CastingInst) => {
     setCurrentCastEdit({ songName, inst });
-  }, []);
+  }, [setCurrentCastEdit]);
 
   const discardCastEdit = useCallback(() => setCurrentCastEdit(null), []);
 
@@ -120,13 +95,13 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== oldStudent.name), newStudent] };
     });
     setUnsavedData(true);
-  }, [currentCastEdit]);
+  }, [currentCastEdit, setUnsavedData]);
 
   const clearAndCloseCasting = useCallback(() => {
     unAssignCasting();
     setCurrentCastEdit(null);
     setUnsavedData(true);
-  }, [unAssignCasting]);
+  }, [unAssignCasting, setUnsavedData]);
 
   const assignCasting = useCallback((studentName: string) => {
     unAssignCasting()
@@ -139,12 +114,11 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       if (!oldStudent)
         return oldState;
       const newStudent: Student = { ...oldStudent, castings: [...oldStudent.castings, { songName: currentCastEdit?.songName, inst: currentCastEdit?.inst }] };
-      const newShow = { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] }
-      return newShow;
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
     }) 
     setCurrentCastEdit(null);
     setUnsavedData(true);
-  }, [currentCastEdit, unAssignCasting]);
+  }, [currentCastEdit, unAssignCasting, setUnsavedData]);
 
   const addStudent = useCallback((newStudent: Student) => {
     if (currentEditingShow?.cast.some(x => x.name === newStudent.name))
@@ -155,7 +129,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return { ...oldState, cast: [...oldState.cast, newStudent]};
     })
     setUnsavedData(true);
-  }, [currentEditingShow]);
+  }, [currentEditingShow, setUnsavedData]);
 
   const updateStudentInfo = useCallback((studentName: string, studentInfo: StudentInfoOptions) => {
     setCurrentEditingShow(oldState => {
@@ -168,19 +142,16 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const deleteStudent = useCallback((studentName: string) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      return {
-        ...oldState,
-        cast: [...oldState.cast.filter(x => x.name !== studentName)],
-      }
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName)] };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const addSong = useCallback((songName: string, artist?: string) => {
     setCurrentEditingShow(oldState => {
@@ -190,7 +161,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return { ...oldState, songs: [...oldState.songs, song] };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const renameSong = useCallback((oldName: string, newName: string, newArtist?: string) => {
     setCurrentEditingShow(oldState => {
@@ -212,7 +183,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const reorderSong = useCallback((moved: string, target: number) => {
     setCurrentEditingShow(oldState => {
@@ -230,7 +201,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       return { ...oldState, songs: orderedSongs };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
 
   const deleteSong = useCallback((songName: string) => {
     setCurrentEditingShow(oldState => {
@@ -245,16 +216,18 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       };
     });
     setUnsavedData(true);
-  }, []);
+  }, [setUnsavedData]);
+
+  const saveSetListSplitIndex = useCallback((setSplitIndex: number) => {
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      return { ...oldState, setSplitIndex };
+    })
+    setUnsavedData(true);
+  }, [setUnsavedData]);
 
   const context = useMemo(() => ({
-    profile,
-    setProfileRequest,
-    saveShowRequest,
-    unsavedData,
-    setUnsavedData,
-    editorView,
-    setEditorView,
     singleArtist,
     setSingleArtist,
     currentEditingShow,
@@ -262,6 +235,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     newShowStatus,
     setNewShowStatus,
     currentCastEdit,
+    highlightedStudent,
+    setHighlightedStudent,
     setCastEdit,
     discardCastEdit,
     assignCasting,
@@ -273,18 +248,10 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     renameSong,
     reorderSong,
     deleteSong,
-    toolsMode,
-    setToolsMode,
     initializeShow,
+    saveSetListSplitIndex,
   }),
     [
-      profile,
-      setProfileRequest,
-      saveShowRequest,
-      unsavedData,
-      setUnsavedData,
-      editorView,
-      setEditorView,
       singleArtist,
       setSingleArtist,
       currentEditingShow,
@@ -292,6 +259,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       newShowStatus,
       setNewShowStatus,
       currentCastEdit,
+      highlightedStudent,
+      setHighlightedStudent,
       setCastEdit,
       discardCastEdit,
       assignCasting,
@@ -303,9 +272,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       renameSong,
       reorderSong,
       deleteSong,
-      toolsMode,
-      setToolsMode,
       initializeShow,
+      saveSetListSplitIndex,
     ]);
 
   return (

@@ -77,6 +77,7 @@ export class ManagerDataService {
       'shows.$.name': showData.name,
       'shows.$.singleArtist': showData.singleArtist,
       'shows.$.twoPmRehearsal': showData.twoPmRehearsal,
+      'shows.$.setSplitIndex': Number(showData.setSplitIndex),
       'shows.$.songs': showData.songs,
       'shows.$.cast': showData.cast,
     } },

@@ -2,7 +2,7 @@ import cookies from 'js-cookie';
 
 const profile = cookies.get('currentProfile');
 
-const useProfile = () => profile || undefined;
+const useGetProfile = () => profile || undefined;
 
-export default useProfile;
+export default useGetProfile;
 
