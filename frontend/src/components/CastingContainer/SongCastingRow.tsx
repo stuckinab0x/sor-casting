@@ -6,6 +6,8 @@ import { ALL_CAST_INST, CastingInst } from '../../models/student';
 import { useEditor } from '../../contexts/editor-context';
 import SongDragDropArea from './SongsDragDropArea';
 import tileColors from '../../tile-color';
+import { useProfile } from '../../contexts/profile-context';
+import { useViews } from '../../contexts/views-context';
 
 interface SongCastingRowProps {
   song: Song;
@@ -16,7 +18,9 @@ interface SongCastingRowProps {
 }
 
 const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit, currentDragging, setCurrentDragging }) => {
-  const { currentEditingShow, setCastEdit, toolsMode, renameSong, deleteSong, reorderSong, prefs } = useEditor();
+  const { prefs } = useProfile();
+  const { toolsMode } = useViews();
+  const { currentEditingShow, setCastEdit, renameSong, deleteSong, reorderSong } = useEditor();
   
   const [editingName, setEditingName] = useState(false);
   const [deleting, setDeleting] = useState(false);

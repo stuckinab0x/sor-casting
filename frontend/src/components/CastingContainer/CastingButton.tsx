@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import styled from 'styled-components';
+import { useEditor } from '../../contexts/editor-context';
 
 interface CastingButtonProps {
   assignedStudent?: string;
@@ -8,8 +9,10 @@ interface CastingButtonProps {
 }
 
 const CastingButton: FC<CastingButtonProps> = ({ assignedStudent, disabled, startCasting }) => {
+  const { highlightedStudent } = useEditor();
+  
   return (
-    <ButtonMain onClick={ startCasting } $disabled={ disabled }>
+    <ButtonMain onClick={ startCasting } $disabled={ disabled } $highlighted={ highlightedStudent === assignedStudent }>
       <h4>{ assignedStudent }</h4>
     </ButtonMain>
   )
@@ -17,11 +20,12 @@ const CastingButton: FC<CastingButtonProps> = ({ assignedStudent, disabled, star
 
 interface ButtonMainProps {
   $disabled: boolean;
+  $highlighted: boolean;
 }
 
 const ButtonMain = styled.div<ButtonMainProps>`
   display: flex;
-  background-color: ${ props => props.theme.colors.bgInner3 };
+  background-color: ${ props => props.$highlighted ? 'orange' : props.theme.colors.bgInner3 };
   padding: 5px 10px;
   margin: 2px;
   border-radius: 2px;

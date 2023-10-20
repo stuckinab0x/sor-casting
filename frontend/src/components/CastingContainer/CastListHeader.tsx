@@ -1,8 +1,9 @@
 import { FC, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { instAndFullNames } from '../../models/song';
-import { useEditor } from '../../contexts/editor-context';
 import { CastingInst } from '../../models/student';
+import { useProfile } from '../../contexts/profile-context';
+import { useViews } from '../../contexts/views-context';
 
 interface CastListHeaderProps {
   showName: string;
@@ -10,9 +11,12 @@ interface CastListHeaderProps {
 }
 
 const CastListHeader: FC<CastListHeaderProps> = ({ showName, disabled }) => {
-  const { toolsMode, setToolsMode, prefs } = useEditor();
+  const { prefs } = useProfile();
+  const { toolsMode, setToolsMode } = useViews();
   
   const hidden = useMemo(() => {
+    if (!prefs)
+      return null;
     const hidden: CastingInst[] = [];
     if (prefs.hideGuitar3)
       hidden.push('gtr3');
@@ -23,18 +27,19 @@ const CastListHeader: FC<CastListHeaderProps> = ({ showName, disabled }) => {
     return hidden;
   }, [prefs])
 
-  return (
-    <HeaderMain $disabled={ disabled }>
-      <CornerTile $active={ toolsMode } onClick={ () => toolsMode && setToolsMode(false) }>
-        { !toolsMode && <span className='material-symbols-outlined' onClick={ () => setToolsMode(!toolsMode) }>settings</span> }
-        <h3>{ toolsMode ? 'Click to  finish editing' : showName }</h3>
-      </CornerTile>
-      { instAndFullNames.filter(x => !hidden.includes(x[1])).map(x => 
-        <InstrumentHeader key={ x[0] }>
-          <h3>{ x[0] }</h3>
-        </InstrumentHeader>)}
-    </HeaderMain>
-  );
+  if (hidden)
+    return (
+      <HeaderMain $disabled={ disabled }>
+        <CornerTile $active={ toolsMode } onClick={ () => toolsMode && setToolsMode(false) }>
+          { !toolsMode && <span className='material-symbols-outlined' onClick={ () => setToolsMode(!toolsMode) }>settings</span> }
+          <h3>{ toolsMode ? 'Click to  finish editing' : showName }</h3>
+        </CornerTile>
+        { instAndFullNames.filter(x => !hidden.includes(x[1])).map(x => 
+          <InstrumentHeader key={ x[0] }>
+            <h3>{ x[0] }</h3>
+          </InstrumentHeader>)}
+      </HeaderMain>
+    );
 }
 
 interface HeaderProps {

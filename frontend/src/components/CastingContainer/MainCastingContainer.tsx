@@ -5,9 +5,12 @@ import SongCastingRow from './SongCastingRow';
 import CastListHeader from './CastListHeader';
 import LowerToolbar from './LowerToolbar';
 import SongDragDropArea from './SongsDragDropArea';
+import { useViews } from '../../contexts/views-context';
 
 const MainCastingContainer: FC = () => {
-  const { currentEditingShow, currentCastEdit, reorderSong, toolsMode } = useEditor();
+  const { toolsMode } = useViews();
+  const { currentEditingShow, currentCastEdit, reorderSong } = useEditor();
+  
   const [activeSongEdit, setActiveSongEdit] = useState<string | null>(null);
   const [addingSong, setAddingSong] = useState(false);
   const [currentDragging, setCurrentDragging] = useState<string | null>('');
@@ -26,7 +29,7 @@ const MainCastingContainer: FC = () => {
       return;
     const setList = [...elements]
     if (currentEditingShow.setSplitIndex > 0 || toolsMode)
-      setList.splice(currentEditingShow?.setSplitIndex, 0, <SetListDivider>{ toolsMode && <h3>Set Divider</h3> }</SetListDivider>)
+      setList.splice(currentEditingShow?.setSplitIndex, 0, <SetListDivider>{ toolsMode && <h3>Set 2</h3> }</SetListDivider>)
     return setList;
   }, [currentEditingShow, toolsMode]);
 

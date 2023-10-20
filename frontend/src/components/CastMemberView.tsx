@@ -4,9 +4,12 @@ import { useEditor } from '../contexts/editor-context';
 import { ALL_INSTRUMENTS, MainInstrument } from '../models/student';
 import CastByInstrumentColumn from './Cast/CastByInstrumentColumn';
 import SelectorButton from './Cast/SelectorButton';
+import { useViews } from '../contexts/views-context';
 
 const CastMemberView: FC = () => {
-  const { currentEditingShow, setEditorView } = useEditor();
+  const { setEditorView } = useViews();
+  const { currentEditingShow } = useEditor();
+  
   const [activeEdit, setActiveEdit] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState('');
   const [addingCastMember, setAddingCastMember] = useState(false);

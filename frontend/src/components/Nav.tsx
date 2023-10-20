@@ -1,28 +1,32 @@
 import { FC } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
+import { useProfile } from '../contexts/profile-context';
+import { useViews } from '../contexts/views-context';
 
 const Nav: FC = () => {
-  const { currentEditingShow, profile, unsavedData, setEditorView, saveShowRequest } = useEditor();
+  const { profile, unsavedData, saveShowRequest } = useProfile();
+  const { setEditorView } = useViews();
+  const { currentEditingShow } = useEditor();
 
-  return (
-  <NavMain>
-    <div>
-      <h1>Rehearsal Manager</h1>
-      { currentEditingShow && 
-        <Button onClick={ () => setEditorView('welcome') }>
-          <h2>{ currentEditingShow.name }</h2>
-        </Button>
-      }
-      { unsavedData && 
-      <SaveButton onClick={ saveShowRequest }>
-        <h3>Save Changes</h3>
-      </SaveButton>
-      }
-    </div>
-    { profile && <ProfileName onClick={ () => setEditorView('profiles') }>Profile: { profile }</ProfileName> }
-  </NavMain>
-  )
+    return (
+    <NavMain>
+      <div>
+        <h1>Rehearsal Manager</h1>
+        { currentEditingShow && 
+          <Button onClick={ () => setEditorView('welcome') }>
+            <h2>{ currentEditingShow.name }</h2>
+          </Button>
+        }
+        { unsavedData && currentEditingShow && 
+        <SaveButton onClick={ () => saveShowRequest(currentEditingShow) }>
+          <h3>Save Changes</h3>
+        </SaveButton>
+        }
+      </div>
+      { profile && <ProfileName onClick={ () => setEditorView('profiles') }>Profile: { profile }</ProfileName> }
+    </NavMain>
+    )
 }
 const NavMain = styled.div`
   display: flex;

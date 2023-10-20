@@ -2,6 +2,8 @@ import { FC, useState, useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../../contexts/editor-context';
 import Prefs from '../../models/prefs';
+import { useProfile } from '../../contexts/profile-context';
+import { useViews } from '../../contexts/views-context';
 
 interface LowerToolbarProps {
   addingSong: boolean;
@@ -9,7 +11,9 @@ interface LowerToolbarProps {
 }
 
 const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
-  const { currentEditingShow, addSong, setEditorView, prefs, setPrefs, toolsMode, saveSetListSplitIndex } = useEditor();
+  const { prefs, setPrefs } = useProfile();
+  const {  setEditorView, toolsMode } = useViews();
+  const { currentEditingShow, addSong, saveSetListSplitIndex } = useEditor();
   
   const [nameInput, setNameInput] = useState('');
   const [artistInput, setArtistInput] = useState('');
@@ -26,7 +30,11 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
   }, [currentEditingShow, nameInput]);
 
   const handlePrefsToggle = useCallback((prefName: keyof Prefs) => {
-    setPrefs(oldState => ({ ...oldState, [prefName]: !oldState[prefName] }))
+    setPrefs(oldState => {
+      if (!oldState)
+        return null;
+      return { ...oldState, [prefName]: !oldState[prefName] };
+    })
   }, [setPrefs]);
 
   const handleSetSplitClick = useCallback((newSplitIndex: number) => {
@@ -50,7 +58,7 @@ const LowerToolbar: FC<LowerToolbarProps> = ({ addingSong, setAddingSong }) => {
       </ToolbarMain>
     )
 
-  if (currentEditingShow)
+  if (currentEditingShow && prefs)
     return (
       <ToolbarMain>
         <Button $disabled={ addingSong && (!nameInput || nameIsDupe) } onClick={ () => addingSong ? handleAddSongClick() : setAddingSong(true) }>
@@ -135,12 +143,7 @@ const SmallButton = styled(Button)`
 `;
 
 const Divider = styled.div`
-  display: flex;
-  background-color: #1f1f1f;
-  border-radius: 2px;
-  margin: 2px;
-  height: 28px;
-  width: 6px;
+  flex: 1;
 `;
 
 const SetDividerText = styled.div`
