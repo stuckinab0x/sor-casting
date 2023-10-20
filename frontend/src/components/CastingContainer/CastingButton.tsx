@@ -3,18 +3,23 @@ import styled from 'styled-components';
 
 interface CastingButtonProps {
   assignedStudent?: string;
+  disabled: boolean;
   startCasting: () => void;
 }
 
-const CastingButton: FC<CastingButtonProps> = ({ assignedStudent, startCasting }) => {
+const CastingButton: FC<CastingButtonProps> = ({ assignedStudent, disabled, startCasting }) => {
   return (
-    <ButtonMain onClick={ startCasting }>
+    <ButtonMain onClick={ startCasting } $disabled={ disabled }>
       <h4>{ assignedStudent }</h4>
     </ButtonMain>
   )
 }
 
-const ButtonMain = styled.div`
+interface ButtonMainProps {
+  $disabled: boolean;
+}
+
+const ButtonMain = styled.div<ButtonMainProps>`
   display: flex;
   background-color: ${ props => props.theme.colors.bgInner3 };
   padding: 5px 10px;
@@ -27,6 +32,8 @@ const ButtonMain = styled.div`
   overflow: hidden;
   white-space: nowrap;
   min-height: 25px;
+
+  ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;' }
 
   > h4 {
     display: flex;

@@ -2,6 +2,7 @@ export interface ShowData {
   name: string;
   singleArtist: boolean;
   twoPmRehearsal: boolean;
+  setSplitIndex: boolean;
   songs: Song[];
   cast: CastMember[];
 }

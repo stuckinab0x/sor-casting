@@ -16,13 +16,24 @@ interface SongCastingRowProps {
 }
 
 const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit, currentDragging, setCurrentDragging }) => {
-  const { currentEditingShow, setCastEdit, toolsMode, renameSong, deleteSong, reorderSong } = useEditor();
+  const { currentEditingShow, setCastEdit, toolsMode, renameSong, deleteSong, reorderSong, prefs } = useEditor();
   
   const [editingName, setEditingName] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [nameInput, setNameInput] = useState(song.name);
   const [artistInput, setArtistInput] = useState(currentEditingShow?.singleArtist ? undefined : song.artist);
   const [dragHover, setDragHover] = useState(false);
+
+  const hidden = useMemo(() => {
+    const hidden: CastingInst[] = [];
+    if (prefs.hideGuitar3)
+      hidden.push('gtr3');
+    if (prefs.hideKeys3)
+      hidden.push('keys3');
+    if (prefs.hideExtras)
+      hidden.push('bgVox3');
+    return hidden;
+  }, [prefs]);
 
   const getCasting = useCallback((songName: string, inst: CastingInst) => {
     if (!currentEditingShow)
@@ -73,7 +84,7 @@ const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit
       /> }
       <div>
         <SongDisplay
-          tileColor={ tileColors[song.order] }
+          $tileColor={ tileColors[song.order] }
           $green={ editingName }
           $red={ deleting }
           draggable={ toolsMode && !editingName && !deleting }
@@ -101,7 +112,7 @@ const SongCastingRow: FC<SongCastingRowProps> = ({ song, disabled, setActiveEdit
           </div>
         }
         { toolsMode && (editingName || deleting) && <ActionButton onClick={ () => { setEditingName(false); setDeleting(false); setActiveEdit(null) } }><h3>{ deleting ? 'Cancel' : 'Discard Changes' }</h3></ActionButton> }
-        { !editingName && !deleting && ALL_CAST_INST.map(inst => <CastingButton key={ inst } assignedStudent={ getCasting(song.name, inst) } startCasting={ () => setCastEdit(song.name, inst) } />) }
+        { !editingName && !deleting && ALL_CAST_INST.filter(x => !hidden.includes(x)).map(inst => <CastingButton key={ inst } disabled={ toolsMode } assignedStudent={ getCasting(song.name, inst) } startCasting={ () => setCastEdit(song.name, inst) } />) }
       </div>
     </RowMain>
   )
@@ -139,7 +150,7 @@ const RowMain = styled.div<RowProps>`
 `;
 
 interface SongDisplayProps {
-  tileColor: string;
+  $tileColor: string;
   $green: boolean;
   $red: boolean;
   $toolsMode: boolean;
@@ -148,7 +159,7 @@ interface SongDisplayProps {
 const SongDisplay = styled.div<SongDisplayProps>`
   display: flex;
   justify-content: space-between;
-  background-color: ${ props => props.tileColor };
+  background-color: ${ props => props.$tileColor };
   background-color: ${ props => props.$green && props.theme.colors.bgGreen };
   background-color: ${ props => props.$red && props.theme.colors.bgRed };
   padding: 5px 10px;

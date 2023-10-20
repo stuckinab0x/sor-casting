@@ -5,4 +5,3 @@ export const createInputs = (count: number) => Array.from(new Array(count).keys(
 export function getFullInstName(inst: string) {
   return instAndFullNames.find(x => x[1] === inst)?.[0] as string;
 }
-

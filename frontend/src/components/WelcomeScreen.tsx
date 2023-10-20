@@ -24,7 +24,8 @@ const WelcomeScreen: FC = () => {
     try {
       const res = await fetch(`/api/shows/${ showName }`);
       const show = await res.json();
-      setCurrentEditingShow(show);
+      
+      setCurrentEditingShow({ ...show, setSplitIndex: Number(show.setSplitIndex) });
       setEditorView('showOverview');
     } catch (error) {
       console.log(error);

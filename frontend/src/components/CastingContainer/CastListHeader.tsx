@@ -1,7 +1,8 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 import { instAndFullNames } from '../../models/song';
 import { useEditor } from '../../contexts/editor-context';
+import { CastingInst } from '../../models/student';
 
 interface CastListHeaderProps {
   showName: string;
@@ -9,15 +10,26 @@ interface CastListHeaderProps {
 }
 
 const CastListHeader: FC<CastListHeaderProps> = ({ showName, disabled }) => {
-  const { toolsMode, setToolsMode } = useEditor();
+  const { toolsMode, setToolsMode, prefs } = useEditor();
   
+  const hidden = useMemo(() => {
+    const hidden: CastingInst[] = [];
+    if (prefs.hideGuitar3)
+      hidden.push('gtr3');
+    if (prefs.hideKeys3)
+      hidden.push('keys3');
+    if (prefs.hideExtras)
+      hidden.push('bgVox3');
+    return hidden;
+  }, [prefs])
+
   return (
     <HeaderMain $disabled={ disabled }>
       <CornerTile $active={ toolsMode } onClick={ () => toolsMode && setToolsMode(false) }>
         { !toolsMode && <span className='material-symbols-outlined' onClick={ () => setToolsMode(!toolsMode) }>settings</span> }
         <h3>{ toolsMode ? 'Click to  finish editing' : showName }</h3>
       </CornerTile>
-      { instAndFullNames.map(x => 
+      { instAndFullNames.filter(x => !hidden.includes(x[1])).map(x => 
         <InstrumentHeader key={ x[0] }>
           <h3>{ x[0] }</h3>
         </InstrumentHeader>)}

@@ -21,11 +21,20 @@ const MainCastingContainer: FC = () => {
     setCurrentDragging(null);
   }, [currentDragging, currentEditingShow, reorderSong]);
 
+  const insertSetDivider = useCallback((elements: JSX.Element[]) => {
+    if (!currentEditingShow)
+      return;
+    const setList = [...elements]
+    if (currentEditingShow.setSplitIndex > 0 || toolsMode)
+      setList.splice(currentEditingShow?.setSplitIndex, 0, <SetListDivider>{ toolsMode && <h3>Set Divider</h3> }</SetListDivider>)
+    return setList;
+  }, [currentEditingShow, toolsMode]);
+
   if (currentEditingShow)
   return (
     <ContainerMain $fade={ !!currentCastEdit } >
       <CastListHeader showName={ currentEditingShow.name } disabled={ addingSong } />
-      { currentEditingShow.songs.map(song => 
+      { insertSetDivider(currentEditingShow.songs.map(song => 
           <SongCastingRow
             key={ song.name }
             song={ song }
@@ -33,7 +42,8 @@ const MainCastingContainer: FC = () => {
             currentDragging={ currentDragging }
             setActiveEdit={ setActiveSongEdit } setCurrentDragging={ setCurrentDragging }
           />
-      )}
+        ))
+      }
       { toolsMode && <SongDragDropArea
         songName='$$last'
         currentDragging={ currentDragging }
@@ -61,6 +71,22 @@ const ContainerMain = styled.div<ContainerProps>`
   ${ props => props.$fade && 'opacity: 0.5;' }
   ${ props => props.$fade && 'pointer-events: none;' }
   background-color: ${ props => props.theme.colors.bgInner2 };
+`;
+
+const SetListDivider= styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: orange;
+  margin: 2px;
+  border-radius: 4px;
+  min-height: 20px;
+  flex: 1;
+
+  > h3 {
+    margin: 16px;
+    color: white;
+  }
 `;
 
 export default MainCastingContainer;

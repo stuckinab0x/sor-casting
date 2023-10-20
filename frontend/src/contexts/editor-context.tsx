@@ -1,9 +1,10 @@
-import { FC, useState, createContext, useCallback, useContext, ReactNode, useMemo, SetStateAction } from 'react';
+import { FC, useState, useEffect, createContext, useCallback, useContext, ReactNode, useMemo, SetStateAction } from 'react';
 import EditorView from '../models/editor-view';
 import Show from '../models/show';
 import Student, { Casting, CastingInst, FivePMStartLesson, MainInstrument, TwoPMStartLesson } from '../models/student';
 import Song from '../models/song';
 import useProfile from '../hooks/use-profile';
+import Prefs from '../models/prefs';
 
 type NewShowStatus = 'songsWereAdded' | 'castWasAdded' | undefined;
 interface StudentInfoOptions {
@@ -14,6 +15,8 @@ interface StudentInfoOptions {
 
 interface EditorContextProps {
   profile: string | undefined;
+  prefs: Prefs;
+  setPrefs: React.Dispatch<SetStateAction<Prefs>>;
   setProfileRequest: (profileName: string) => void;
   saveShowRequest: () => Promise<void>;
   unsavedData: boolean;
@@ -41,6 +44,7 @@ interface EditorContextProps {
   toolsMode: boolean;
   setToolsMode: (on: boolean) => void;
   initializeShow: (showName: string, singleArtist: boolean, startsAtTwo: boolean) => void;
+  saveSetListSplitIndex: (setSplitIndex: number) => void;
 }
 
 const EditorContext = createContext<EditorContextProps | null>(null);
@@ -72,6 +76,20 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   const [currentCastEdit, setCurrentCastEdit] = useState<Casting | null>(null);
   const [toolsMode, setToolsMode] = useState(false);
 
+  const [prefs, setPrefs] = useState<Prefs>({ hideGuitar3: false, hideKeys3: false, hideExtras: false });
+
+  useEffect(() => {
+    const storagePrefs = localStorage.getItem('prefs');
+    if (!storagePrefs)
+      return;
+    const loadedPrefs = JSON.parse(storagePrefs)
+    setPrefs(loadedPrefs);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('prefs', JSON.stringify(prefs))
+  }, [prefs]);
+
   const setProfileRequest = useCallback(async (profileName: string) => {
     await fetch(`/api/profiles/${ profileName }`, { method: 'PUT' });
     location.reload();
@@ -93,6 +111,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,
+      setSplitIndex: 0,
       songs: [],
       cast:[],
     }
@@ -139,8 +158,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       if (!oldStudent)
         return oldState;
       const newStudent: Student = { ...oldStudent, castings: [...oldStudent.castings, { songName: currentCastEdit?.songName, inst: currentCastEdit?.inst }] };
-      const newShow = { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] }
-      return newShow;
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
     }) 
     setCurrentCastEdit(null);
     setUnsavedData(true);
@@ -174,10 +192,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      return {
-        ...oldState,
-        cast: [...oldState.cast.filter(x => x.name !== studentName)],
-      }
+      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName)] };
     });
     setUnsavedData(true);
   }, []);
@@ -247,8 +262,19 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setUnsavedData(true);
   }, []);
 
+  const saveSetListSplitIndex = useCallback((setSplitIndex: number) => {
+    setCurrentEditingShow(oldState => {
+      if (!oldState)
+        return null;
+      return { ...oldState, setSplitIndex };
+    })
+    setUnsavedData(true);
+  }, []);
+
   const context = useMemo(() => ({
     profile,
+    prefs,
+    setPrefs,
     setProfileRequest,
     saveShowRequest,
     unsavedData,
@@ -276,9 +302,12 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     toolsMode,
     setToolsMode,
     initializeShow,
+    saveSetListSplitIndex,
   }),
     [
       profile,
+      prefs,
+      setPrefs,
       setProfileRequest,
       saveShowRequest,
       unsavedData,
@@ -306,6 +335,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       toolsMode,
       setToolsMode,
       initializeShow,
+      saveSetListSplitIndex,
     ]);
 
   return (

@@ -37,7 +37,6 @@ const NewCastView: FC = () => {
   const buttonText = useMemo(() => {
     const lowerCased = potentialCastList.map(x => x.name.toLowerCase());
     const dupes = lowerCased.length !== new Set(lowerCased).size;
-    console.log(dupes);
     if (dupes && potentialCastList.length)
       return 'Fix duplicate names';
     if (newShowStatus === 'songsWereAdded')
