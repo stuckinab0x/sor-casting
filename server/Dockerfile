@@ -1,4 +1,4 @@
-FROM alpine:3.15 as builder
+FROM alpine:3.19 as builder
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
 RUN apk add yarn
@@ -14,7 +14,7 @@ COPY frontend/public/ public/
 RUN yarn --pure-lockfile
 RUN if [ "$NODE_ENV" = "production" ] ; then set -e; yarn run build ; mv dist ../server/src/public ; rm -rf ../frontend ; fi
 
-FROM alpine:3.15
+FROM alpine:3.19
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
 EXPOSE 80

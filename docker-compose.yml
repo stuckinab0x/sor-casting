@@ -1,4 +1,3 @@
-version: '3'
 services:
   server:
     build:
@@ -8,7 +7,7 @@ services:
         NODE_ENV: development
     env_file: server/.env
     volumes:
-      - ./server :/app/server
+      - ./server:/app/server
     entrypoint: ["yarn", "run", "start:dev"]
     ports:
       - "8050:80"

@@ -1,4 +1,4 @@
-FROM alpine:3.15
+FROM alpine:3.19
 EXPOSE 5173
 RUN apk add yarn
 WORKDIR app
