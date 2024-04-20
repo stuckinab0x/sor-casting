@@ -54,7 +54,7 @@ const CastMemberView: FC = () => {
       : 
       <>
         <Row>
-          <AddButton onClick={ () => setAddingCastMember(true) }>
+          <AddButton onClick={ () => setAddingCastMember(true) } $disabled={ !!activeEdit }>
               <h2>New Cast Member</h2>
             </AddButton>
           <Button onClick={ () => setEditorView('showOverview') }>
@@ -101,6 +101,7 @@ const Button = styled.div`
   padding: 4px 10px;
   margin: 7px;
   cursor: pointer;
+  user-select: none;
   box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.5);
 
   > h2 {
@@ -114,7 +115,6 @@ interface AddButtonProps {
 
 const AddButton = styled(Button)<AddButtonProps>`
   background-color: orange;
-
   ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;' }
 `;
 
