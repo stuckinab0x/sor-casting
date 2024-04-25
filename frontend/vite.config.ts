@@ -7,8 +7,8 @@ export default defineConfig({
     include: /\.(js|jsx|ts|tsx)$/,
   })],
   server: {
-    watch: {
-      usePolling: true,
-    }
+    host: true,
+    port: 5173,
+    hmr: { port: 5173 },
   }
 })

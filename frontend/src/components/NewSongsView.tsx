@@ -6,11 +6,12 @@ import { createInputs } from '../utils';
 import Song from '../models/song';
 import { useProfile } from '../contexts/profile-context';
 import { useViews } from '../contexts/views-context';
+import { v4 as uuidv4 } from 'uuid';
 
 const NewSongsView: FC = () => {
   const { setUnsavedData } = useProfile();
   const { setEditorView } = useViews();
-  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow } = useEditor();
+  const { currentEditingShow, newShowStatus, setNewShowStatus, setCurrentEditingShow, availableColors } = useEditor();
   
   const [songInputs, setSongInputs] = useState<InputUpdate[]>(createInputs(20));
   const [artistInputs, setArtistInputs] = useState<InputUpdate[]>(createInputs(20));
@@ -37,9 +38,9 @@ const NewSongsView: FC = () => {
   const addSongs = useCallback(() => {
     if (!currentEditingShow)
       return;
-    let songs: Song[] = songInputs.map((x, i) => ({ name: x.value, artist: artistInputs[i].value, order: i })).filter(x => x.name);
+    let songs: Song[] = songInputs.map((x, i) => ({ id: uuidv4(), name: x.value, artist: artistInputs[i].value, color: availableColors[i] })).filter(x => x.name);
     if (currentEditingShow.singleArtist)
-      songs = songs.map((x, i) => ({ name: x.name, order: i }))
+      songs = songs.map((x, i) => ({ id: x.id, name: x.name, order: i, color: availableColors[i] }))
     setCurrentEditingShow({ ...currentEditingShow, songs: [...songs] });
     if (newShowStatus === 'castWasAdded') {
       setEditorView('showOverview');
@@ -50,7 +51,7 @@ const NewSongsView: FC = () => {
       setEditorView('newShowCast');
     }
     setUnsavedData(true);
-  }, [songInputs, artistInputs, currentEditingShow, setCurrentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setUnsavedData]);
+  }, [songInputs, artistInputs, currentEditingShow, setCurrentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setUnsavedData, availableColors]);
 
   const addAnotherInput = useCallback(() => {
     setSongInputs(oldState => [...oldState, { value: '', id: oldState.length }]);

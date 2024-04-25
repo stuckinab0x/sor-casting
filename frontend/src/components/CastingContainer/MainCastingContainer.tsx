@@ -29,7 +29,7 @@ const MainCastingContainer: FC = () => {
       return;
     const setList = [...elements]
     if (currentEditingShow.setSplitIndex > 0 || toolsMode)
-      setList.splice(currentEditingShow?.setSplitIndex, 0, <SetListDivider>{ toolsMode && <h3>Set 2</h3> }</SetListDivider>)
+      setList.splice(currentEditingShow?.setSplitIndex, 0, <SetListDivider key='divider'>{ toolsMode && <h3>Set 2</h3> }</SetListDivider>)
     return setList;
   }, [currentEditingShow, toolsMode]);
 
@@ -39,16 +39,16 @@ const MainCastingContainer: FC = () => {
       <CastListHeader showName={ currentEditingShow.name } disabled={ addingSong } />
       { insertSetDivider(currentEditingShow.songs.map(song => 
           <SongCastingRow
-            key={ song.name }
+            key={ song.id }
             song={ song }
-            disabled={ addingSong || (!!activeSongEdit && activeSongEdit !== song.name) }
+            disabled={ addingSong || (!!activeSongEdit && activeSongEdit !== song.id) }
             currentDragging={ currentDragging }
-            setActiveEdit={ setActiveSongEdit } setCurrentDragging={ setCurrentDragging }
+            setActiveSongEdit={ setActiveSongEdit } setCurrentDragging={ setCurrentDragging }
           />
         ))
       }
       { toolsMode && <SongDragDropArea
-        songName='$$last'
+        songId='$$last'
         currentDragging={ currentDragging }
         dragHover={ endDragHover }
         setDragHover={ setEndDragHover }

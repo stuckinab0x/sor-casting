@@ -16,6 +16,10 @@ const serveStatic = express.static('src/public', { extensions: ['html'] });
 app.use(cookieParser());
 app.use(express.json());
 
+app.use(async (req, res, next) => {
+  try { next(); } catch (error: any) { res.sendStatus(500) }
+});
+
 app.get('/api/authcode', apiKeyAuth, (req, res) => {
   res.send(newAuthCode());
   res.end();

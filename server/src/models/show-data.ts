@@ -12,9 +12,10 @@ export default interface Show extends ShowData {
 }
 
 interface Song {
+  id: string;
   name: string;
   artist?: string;
-  order: number;
+  color: string;
 }
 
 interface Casting {

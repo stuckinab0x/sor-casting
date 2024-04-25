@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../../contexts/editor-context';
 import { ALL_INSTRUMENTS } from '../../models/student';
@@ -8,11 +8,13 @@ import { getFullInstName } from '../../utils';
 const CastingPicker: FC = () => {
   const { currentCastEdit, currentEditingShow, clearAndCloseCasting, discardCastEdit } = useEditor();
 
+  const songName = useMemo(() => currentEditingShow?.songs.find(x => x.id === currentCastEdit?.songId)?.name, [currentEditingShow, currentCastEdit]);
+
   if (currentEditingShow && currentCastEdit)
   return (
     <PickerMain>
       <h2>{ getFullInstName(currentCastEdit?.inst) }</h2>
-      <h2>{ currentCastEdit?.songName }</h2>
+      <h2>{ songName }</h2>
       <div>
         <Button onClick={ clearAndCloseCasting }>
           <h3>Clear Casting</h3>

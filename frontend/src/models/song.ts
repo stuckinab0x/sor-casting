@@ -1,9 +1,10 @@
 import { CastingInst } from './student';
 
 export default interface Song {
+  id: string;
   name: string;
   artist?: string;
-  order: number;
+  color: string;
 }
 
 export interface CastSong extends Song {
