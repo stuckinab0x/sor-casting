@@ -99,7 +99,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       const oldStudent = oldState.cast.find(x => x.castings.some(casting => casting.inst === currentCastEdit.inst && casting.songId === currentCastEdit.songId));
       if (!oldStudent)
         return oldState;
-      const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => x.inst !== currentCastEdit.inst && x.songId !== currentCastEdit.songId) };
+      const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => !(x.inst === currentCastEdit.inst && x.songId === currentCastEdit.songId)) };
       return { ...oldState, cast: oldState.cast.toSpliced(oldState.cast.findIndex(x => x === oldStudent), 1, newStudent) };
     });
     setUnsavedData(true);
