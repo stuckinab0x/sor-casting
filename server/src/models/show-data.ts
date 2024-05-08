@@ -1,10 +1,16 @@
 export interface ShowData {
+  id: string;
   name: string;
   singleArtist: boolean;
   twoPmRehearsal: boolean;
   setSplitIndex: boolean;
   songs: Song[];
   cast: CastMember[];
+}
+
+export interface ShowNameAndId {
+  id: string;
+  name: string;
 }
 
 export default interface Show extends ShowData {

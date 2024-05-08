@@ -73,6 +73,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
+      id: uuidv4(),
       name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,

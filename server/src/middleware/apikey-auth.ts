@@ -9,7 +9,7 @@ const apiKeyAuth: RequestHandler = (req, res, next) => {
   if (req.cookies.rehearsalmanagertoken && activeTokens.includes(req.cookies.rehearsalmanagertoken))
     return next();
   res.status(401);
-  res.end();
-}
+  return res.end();
+};
 
 export default apiKeyAuth;

@@ -3,18 +3,23 @@ import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
 import { useViews } from '../contexts/views-context';
 
+interface ShowNameAndId {
+  id: string;
+  name: string;
+}
+
 const WelcomeScreen: FC = () => {
   const { setEditorView } = useViews();
   const { setCurrentEditingShow } = useEditor();
 
-  const [showNames, setShowNames] = useState<string[] | undefined>();
+  const [showNamesAndIds, setShowNamesAndIds] = useState<ShowNameAndId[] | undefined>();
 
   useEffect(() => {
     const requestShowNames = async () => {
       try {
         const res = await fetch('/api/shows');
-        const showNames: string[] = await res.json();
-          setShowNames(showNames);
+        const shows: ShowNameAndId[] = await res.json();
+          setShowNamesAndIds(shows);
       } catch (error) {
         console.log(error);
       }
@@ -22,9 +27,9 @@ const WelcomeScreen: FC = () => {
     requestShowNames();
   }, []);
 
-  const loadShowRequest = useCallback(async (showName: string) => {
+  const loadShowRequest = useCallback(async (showId: string) => {
     try {
-      const res = await fetch(`/api/shows/${ showName }`);
+      const res = await fetch(`/api/shows/${ showId }`);
       const show = await res.json();
       
       setCurrentEditingShow({ ...show, setSplitIndex: Number(show.setSplitIndex) });
@@ -40,9 +45,9 @@ const WelcomeScreen: FC = () => {
       <h1>
         Create/Edit Shows:
       </h1>
-      { showNames && <ShowsList>
-        { showNames.map(x => <Button key={ x } onClick={ () => loadShowRequest(x) }>
-          <h2>{ x }</h2>
+      { showNamesAndIds && <ShowsList>
+        { showNamesAndIds.map(x => <Button key={ x.name } onClick={ () => loadShowRequest(x.id) }>
+          <h2>{ x.name }</h2>
         </Button>) }
       </ShowsList> }
       <Divider />
