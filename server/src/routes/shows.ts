@@ -1,22 +1,22 @@
 import { Router } from 'express';
-import { ManagerDataService } from '../manager-data-service';
+import ManagerDataService from '../manager-data-service';
 import apiKeyAuth from '../middleware/apikey-auth';
 
 function showsRouter(managerDataService: ManagerDataService) {
   const router = Router();
 
-  router.use(apiKeyAuth)
+  router.use(apiKeyAuth);
 
   router.get('/', async (req, res) => {
     const currentProfile = await managerDataService.getCurrentProfileName();
-    const showNames = await managerDataService.getShowNames(currentProfile);
-    res.send(showNames);
+    const showNamesAndIds = await managerDataService.getShowNamesAndIds(currentProfile);
+    res.send(showNamesAndIds);
     res.end();
   });
-  
+
   router.put('/', async (req, res) => {
     const currentProfile = await managerDataService.getCurrentProfileName();
-    const exists = await managerDataService.getShow(currentProfile, req.body.name);
+    const exists = await managerDataService.getShow(currentProfile, req.body.id);
     if (!exists)
       await managerDataService.addNewShow(currentProfile, req.body);
     else
@@ -29,12 +29,13 @@ function showsRouter(managerDataService: ManagerDataService) {
     await managerDataService.saveShowWithRehearsals(req.params.profileName, req.body);
     res.sendStatus(200);
     res.end();
-  })
-  
-  router.get('/:showName', async (req, res) => {
+  });
+
+  router.get('/:showId', async (req, res) => {
     const currentProfile = await managerDataService.getCurrentProfileName();
-    const showData = await managerDataService.getShow(currentProfile, req.params.showName);
+    const showData = await managerDataService.getShow(currentProfile, req.params.showId);
     res.send({
+      id: showData.id,
       name: showData.name,
       singleArtist: showData.singleArtist,
       twoPmRehearsal: showData.twoPmRehearsal,
@@ -49,7 +50,7 @@ function showsRouter(managerDataService: ManagerDataService) {
     const profile = await managerDataService.getProfile(req.params.profileName);
     res.send(profile.shows);
     res.end();
-  })
+  });
 
   return router;
 }

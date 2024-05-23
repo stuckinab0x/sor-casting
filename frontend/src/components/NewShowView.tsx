@@ -121,7 +121,7 @@ const Button = styled.div<ButtonProps>`
   font-size: 20px;
   ${ props => props.$fontLarge && 'font-size: 25px;' }
   background-color: ${ props => props.theme.colors.bgInner2 };
-  ${ props => props.$orange && 'background-color: orange;' }
+  ${ props => props.$orange && `background-color: ${ props.theme.colors.accent };` }
   border-radius: 4px;
   margin: 5px;
   padding: 5px;

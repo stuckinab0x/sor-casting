@@ -75,7 +75,7 @@ interface ButtonProps {
 
 const Button = styled.div<ButtonProps>`
   display: flex;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   justify-content: center;
   border-radius: 4px;
   padding: 4px;

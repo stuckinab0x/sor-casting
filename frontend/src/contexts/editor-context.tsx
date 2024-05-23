@@ -1,8 +1,9 @@
 import { FC, useState, createContext, useCallback, useContext, ReactNode, useMemo, SetStateAction } from 'react';
 import Show from '../models/show';
 import Student, { Casting, CastingInst, FivePMStartLesson, MainInstrument, TwoPMStartLesson } from '../models/student';
-import Song from '../models/song';
 import { useProfile } from './profile-context';
+import { v4 as uuidv4 } from 'uuid';
+import tileColors from '../tile-color';
 
 type NewShowStatus = 'songsWereAdded' | 'castWasAdded' | undefined;
 interface StudentInfoOptions {
@@ -21,7 +22,7 @@ interface EditorContextProps {
   currentCastEdit: Casting | null;
   highlightedStudent: string | null;
   setHighlightedStudent: (studentName: string | null) => void;
-  setCastEdit: (songName: string, inst: CastingInst) => void;
+  setCastEdit: (songId: string, inst: CastingInst) => void;
   discardCastEdit: () => void;
   assignCasting: (studentName: string) => void;
   clearAndCloseCasting: () => void;
@@ -29,11 +30,12 @@ interface EditorContextProps {
   updateStudentInfo: (studentName: string, studentInfo: StudentInfoOptions) => void;
   deleteStudent: (studentName: string) => void;
   addSong: (songName: string, artist?: string) => void;
-  renameSong: (oldName: string, newName: string, newArtist?: string) => void;
-  reorderSong: (moved: string, target: number) => void;
-  deleteSong: (songName: string) => void;
+  renameSong: (songId: string, newName: string, newArtist?: string) => void;
+  reorderSong: (movedSongId: string, target: number) => void;
+  deleteSong: (songId: string) => void;
   initializeShow: (showName: string, singleArtist: boolean, startsAtTwo: boolean) => void;
   saveSetListSplitIndex: (setSplitIndex: number) => void;
+  availableColors: string[];
 }
 
 const EditorContext = createContext<EditorContextProps | null>(null);
@@ -61,9 +63,17 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   const [newShowStatus, setNewShowStatus] = useState<NewShowStatus>();
   const [currentCastEdit, setCurrentCastEdit] = useState<Casting | null>(null);
   const [highlightedStudent, setHighlightedStudent] = useState<string | null>(null);
+
+  const availableColors = useMemo(() => {
+    if (!currentEditingShow?.songs)
+      return [];
+    const usedColors = currentEditingShow?.songs.map(x => x.color);
+    return tileColors.filter(x => !usedColors.find(color => color === x));
+  }, [currentEditingShow?.songs]);
   
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
+      id: uuidv4(),
       name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,
@@ -75,8 +85,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setUnsavedData(true);
   }, [setUnsavedData]);
 
-  const setCastEdit = useCallback((songName: string, inst: CastingInst) => {
-    setCurrentCastEdit({ songName, inst });
+  const setCastEdit = useCallback((songId: string, inst: CastingInst) => {
+    setCurrentCastEdit({ songId, inst });
   }, [setCurrentCastEdit]);
 
   const discardCastEdit = useCallback(() => setCurrentCastEdit(null), []);
@@ -87,12 +97,11 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      const oldStudent = oldState.cast.find(x => x.castings.some(casting => casting.inst === currentCastEdit.inst && casting.songName === currentCastEdit.songName));
+      const oldStudent = oldState.cast.find(x => x.castings.some(casting => casting.inst === currentCastEdit.inst && casting.songId === currentCastEdit.songId));
       if (!oldStudent)
         return oldState;
-      const removedCasting = oldStudent.castings.find(x => x.inst === currentCastEdit.inst && x.songName === currentCastEdit.songName);
-      const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => x !== removedCasting) };
-      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== oldStudent.name), newStudent] };
+      const newStudent: Student = { ...oldStudent, castings: oldStudent.castings.filter(x => !(x.inst === currentCastEdit.inst && x.songId === currentCastEdit.songId)) };
+      return { ...oldState, cast: oldState.cast.toSpliced(oldState.cast.findIndex(x => x === oldStudent), 1, newStudent) };
     });
     setUnsavedData(true);
   }, [currentCastEdit, setUnsavedData]);
@@ -113,8 +122,8 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       const oldStudent = oldState.cast.find(x => x.name === studentName);
       if (!oldStudent)
         return oldState;
-      const newStudent: Student = { ...oldStudent, castings: [...oldStudent.castings, { songName: currentCastEdit?.songName, inst: currentCastEdit?.inst }] };
-      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
+      const newStudent: Student = { ...oldStudent, castings: [...oldStudent.castings, { songId: currentCastEdit?.songId, inst: currentCastEdit?.inst }] };
+      return { ...oldState, cast: oldState.cast.toSpliced(oldState.cast.findIndex(x => x === oldStudent), 1, newStudent) };
     }) 
     setCurrentCastEdit(null);
     setUnsavedData(true);
@@ -139,7 +148,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       if (!oldStudent)
         return oldState;
       const newStudent: Student = { ...oldStudent, name: studentInfo.name, lesson: studentInfo.lesson, main: studentInfo.main };
-      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName), newStudent] };
+      return { ...oldState, cast: oldState.cast.toSpliced(oldState.cast.findIndex(x => x === oldStudent), 1, newStudent) };
     });
     setUnsavedData(true);
   }, [setUnsavedData]);
@@ -148,7 +157,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      return { ...oldState, cast: [...oldState.cast.filter(x => x.name !== studentName)] };
+      return { ...oldState, cast: oldState.cast.filter(x => x.name !== studentName) };
     });
     setUnsavedData(true);
   }, [setUnsavedData]);
@@ -157,62 +166,45 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      const song: Song = { name: songName, artist, order: oldState.songs.length };
-      return { ...oldState, songs: [...oldState.songs, song] };
+      return { ...oldState, songs: [...oldState.songs, { id: uuidv4(), name: songName, artist, color: availableColors[0] }] };
     });
     setUnsavedData(true);
-  }, [setUnsavedData]);
+  }, [setUnsavedData, availableColors]);
 
-  const renameSong = useCallback((oldName: string, newName: string, newArtist?: string) => {
+  const renameSong = useCallback((songId: string, newName: string, newArtist?: string) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      const affectedStudents = oldState.cast.filter(x => x.castings.some(casting => casting.songName === oldName))
-        .map(x => {
-          const affectedCastings = x.castings.filter(casting => casting.songName === oldName)
-            .map(casting => ({ songName: newName, inst: casting.inst }));
-          return { ...x, castings: [...x.castings.filter(casting => casting.songName !== oldName), ...affectedCastings] };
-        });
-      const oldSong = oldState.songs.find(x => x.name === oldName);
+      const oldSong = oldState.songs.find(x => x.id === songId);
       if (!oldSong)
         return oldState;
-      return { 
-        ...oldState,
-        songs: [...oldState.songs.filter(x => x.name !== oldName), { name: newName, artist: newArtist, order: oldSong.order }],
-        cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === oldName)), ...affectedStudents],
-      };
+      return { ...oldState, songs: oldState.songs.toSpliced(oldState.songs.findIndex(x => x === oldSong), 1, { ...oldSong, name: newName, artist: newArtist }) };
     });
     setUnsavedData(true);
   }, [setUnsavedData]);
 
-  const reorderSong = useCallback((moved: string, target: number) => {
+  const reorderSong = useCallback((movedSongId: string, target: number) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      
-      const allSongsInOrder = [...oldState.songs].sort((a, b) => a.order - b.order);
-      const movedIndex = allSongsInOrder.findIndex(x => x.name === moved);
+      const movedIndex = oldState.songs.findIndex(x => x.id === movedSongId);
       if (movedIndex === -1)
         return oldState;
-      const newSong: Song = { ...allSongsInOrder[movedIndex] };
-      const songsWithPlaceholder = [...allSongsInOrder.slice(0, movedIndex), { ...allSongsInOrder[movedIndex], name: '$placeholder' },...allSongsInOrder.slice(movedIndex + 1)];
-      songsWithPlaceholder.splice(target, 0, newSong);
-      const orderedSongs = songsWithPlaceholder.filter(x => x.name !== '$placeholder').map((x, i) => ({ ...x, order: i }));
-      return { ...oldState, songs: orderedSongs };
+      const newSongs = oldState.songs.toSpliced(target, 0, { ...oldState.songs[movedIndex] })
+      newSongs.splice(movedIndex >= target ? movedIndex + 1 : movedIndex, 1);
+      return { ...oldState, songs: newSongs }
     });
     setUnsavedData(true);
   }, [setUnsavedData]);
 
-  const deleteSong = useCallback((songName: string) => {
+  const deleteSong = useCallback((songId: string) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      const affectedStudents = oldState.cast.filter(x => x.castings.some(casting => casting.songName === songName))
-        .map(x => ({ ...x, castings: x.castings.filter(casting => casting.songName !== songName) }));
       return {
         ...oldState,
-        cast: [...oldState.cast.filter(x => !x.castings.some(casting => casting.songName === songName)), ...affectedStudents],
-        songs: oldState.songs.filter(x => x.name !== songName),
+        cast: oldState.cast.map(x => ({ ...x, castings: x.castings.filter(x => x.songId !== songId) })),
+        songs: oldState.songs.filter(x => x.id !== songId),
       };
     });
     setUnsavedData(true);
@@ -250,6 +242,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     deleteSong,
     initializeShow,
     saveSetListSplitIndex,
+    availableColors,
   }),
     [
       singleArtist,
@@ -274,6 +267,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
       deleteSong,
       initializeShow,
       saveSetListSplitIndex,
+      availableColors,
     ]);
 
   return (

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ManagerDataService } from '../manager-data-service'
+import ManagerDataService from '../manager-data-service';
 import apiKeyAuth from '../middleware/apikey-auth';
 import ProfileSummary from '../models/profile-summary';
 
@@ -12,15 +12,19 @@ function ProfilesRouter(managerDataService: ManagerDataService) {
     const profileNames = await managerDataService.getAllProfileNames();
     res.send(profileNames);
     res.end();
-  })
+  });
 
   router.get('/:profileName', async (req, res) => {
-    const allProfile = await managerDataService.getProfile(req.params.profileName)
-    const summary: ProfileSummary = { profileName: allProfile.profileName, lastModified: allProfile.lastModified, shows: allProfile.shows.map(x => ({ name: x.name, songNames: x.songs.map(x => x.name), noOfRehearsals: x.rehearsals.length })) };
+    const allProfile = await managerDataService.getProfile(req.params.profileName);
+    const summary: ProfileSummary = {
+      profileName: allProfile.profileName,
+      lastModified: allProfile.lastModified,
+      shows: allProfile.shows.map(x => ({ name: x.name, songNames: x.songs.map(song => song.name), noOfRehearsals: x.rehearsals.length })),
+    };
     res.send(summary);
     res.end();
-  })
-  
+  });
+
   router.put('/:profileName', async (req, res) => {
     await managerDataService.setConfig(req.params.profileName);
     res.sendStatus(200);
@@ -30,4 +34,4 @@ function ProfilesRouter(managerDataService: ManagerDataService) {
   return router;
 }
 
-export default ProfilesRouter
+export default ProfilesRouter;

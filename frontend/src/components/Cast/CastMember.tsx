@@ -131,7 +131,7 @@ const ActionButton = styled.div`
 `;
 
 const ConfirmButton = styled(ActionButton)`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
 `;
 
 export default CastMember;

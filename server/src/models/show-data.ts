@@ -1,4 +1,5 @@
 export interface ShowData {
+  id: string;
   name: string;
   singleArtist: boolean;
   twoPmRehearsal: boolean;
@@ -7,14 +8,20 @@ export interface ShowData {
   cast: CastMember[];
 }
 
+export interface ShowNameAndId {
+  id: string;
+  name: string;
+}
+
 export default interface Show extends ShowData {
   rehearsals: Rehearsal[];
 }
 
 interface Song {
+  id: string;
   name: string;
   artist?: string;
-  order: number;
+  color: string;
 }
 
 interface Casting {

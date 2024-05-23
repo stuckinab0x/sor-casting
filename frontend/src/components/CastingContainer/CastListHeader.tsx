@@ -62,7 +62,7 @@ const HeaderMain = styled.div<HeaderProps>`
 
 const InstrumentHeader = styled.div`
   display: flex;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   padding: 5px 10px;
   margin: 2px;
   border-radius: 2px;
@@ -101,7 +101,7 @@ const CornerTile = styled(InstrumentHeader)<CornerTileProps>`
     }
 
     50% {
-      background-color: orange;
+      background-color: ${ props => props.theme.colors.accent };
     }
 
     100% {

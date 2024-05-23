@@ -2,7 +2,7 @@ import { FC } from 'react';
 import styled from 'styled-components';
 
 interface SongDragDropAreaProps {
-  songName: string;
+  songId: string;
   currentDragging: string | null;
   dragHover: boolean;
   setDragHover: (hover: boolean) => void;
@@ -10,10 +10,10 @@ interface SongDragDropAreaProps {
   last?: boolean;
 }
 
-const SongDragDropArea: FC<SongDragDropAreaProps> = ({ songName, currentDragging, dragHover, setDragHover, handleDrop, last }) => (
+const SongDragDropArea: FC<SongDragDropAreaProps> = ({ songId, currentDragging, dragHover, setDragHover, handleDrop, last }) => (
   <DragDropArea
-    $hover={ dragHover && (!!last || currentDragging !== songName) }
-    onDragOver={ event => { setDragHover(true); (!!last || currentDragging !== songName) && event.preventDefault() } }
+    $hover={ dragHover && (!!last || currentDragging !== songId) }
+    onDragOver={ event => { setDragHover(true); (!!last || currentDragging !== songId) && event.preventDefault() } }
     onDragLeave={ () => setDragHover(false) }
     onDrop={ handleDrop }>
     <h3>
@@ -34,7 +34,7 @@ const DragDropArea = styled.div<DragDropAreaProps>`
   padding-left: 20px;
   margin-bottom: 2px;
   width: 100%;
-  ${ props => props.$hover && 'background-color: orange;' }
+  ${ props => props.$hover && `background-color: ${ props.theme.colors.accent };` }
 
   > h3 {
     color: white;

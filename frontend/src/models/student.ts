@@ -6,7 +6,7 @@ export default interface Student {
 }
 
 export interface Casting {
-  songName: string;
+  songId: string;
   inst: CastingInst;
 }
 
