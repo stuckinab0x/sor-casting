@@ -34,7 +34,7 @@ const Column = styled.div`
 `;
 
 const InstrumentHeader = styled.div`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   padding: 5px;
   margin: 2px;
   border-radius: 2px;

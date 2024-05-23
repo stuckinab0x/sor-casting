@@ -116,7 +116,7 @@ const Button = styled.div<ButtonProps>`
   border-radius: 2px;
   margin: 2px;
   padding: 5px 10px;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   width: 250px;
   cursor: pointer;
 

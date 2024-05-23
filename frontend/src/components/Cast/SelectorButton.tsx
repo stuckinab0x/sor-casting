@@ -22,7 +22,7 @@ interface ButtonProps {
 const ButtonMain = styled.div<ButtonProps>`
   display: flex;
   align-items: center;
-  background-color: ${ props => props.$orange ? 'orange' : props.theme.colors.bgInner2 };
+  background-color: ${ props => props.$orange ? props.theme.colors.accent : props.theme.colors.bgInner2 };
   border-radius: 4px;
   margin: 0px 2px;
   padding: 2px 4px;

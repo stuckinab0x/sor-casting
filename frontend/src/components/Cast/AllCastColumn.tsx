@@ -41,7 +41,7 @@ const Tile = styled.div<TileProps>`
   width: 250px;
   margin: 2px;
   border-radius: 4px;
-  background-color: ${ props => props.$orange ? 'orange' : props.theme.colors.bgInner3 };
+  background-color: ${ props => props.$orange ? props.theme.colors.accent : props.theme.colors.bgInner3 };
   ${ props => props.$student && 'cursor: pointer;' }
   user-select: none;
   

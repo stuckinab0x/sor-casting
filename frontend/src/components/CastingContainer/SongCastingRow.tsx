@@ -218,7 +218,7 @@ interface ButtonOrangeProps {
 }
 
 const ButtonOrange = styled(ActionButton)<ButtonOrangeProps>`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
 
   ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;' }
 `;

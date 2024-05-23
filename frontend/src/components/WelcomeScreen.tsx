@@ -86,7 +86,7 @@ const Divider = styled.div`
 
 const Button = styled.div`
   display: flex;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   justify-content: center;
   border-radius: 4px;
   padding: 4px;

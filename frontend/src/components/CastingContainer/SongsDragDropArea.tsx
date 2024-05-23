@@ -34,7 +34,7 @@ const DragDropArea = styled.div<DragDropAreaProps>`
   padding-left: 20px;
   margin-bottom: 2px;
   width: 100%;
-  ${ props => props.$hover && 'background-color: orange;' }
+  ${ props => props.$hover && `background-color: ${ props.theme.colors.accent };` }
 
   > h3 {
     color: white;

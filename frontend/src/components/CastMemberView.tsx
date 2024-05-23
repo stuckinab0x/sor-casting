@@ -114,7 +114,7 @@ interface AddButtonProps {
 }
 
 const AddButton = styled(Button)<AddButtonProps>`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   ${ props => props.$disabled && 'pointer-events: none; opacity: 0.5;' }
 `;
 

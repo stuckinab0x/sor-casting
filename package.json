@@ -8,7 +8,8 @@
   },
   "workspaces": [
     "frontend",
-    "server"
+    "server",
+    "migrate-mongo"
   ],
   "dependencies": {
     "@tsconfig/node20": "^20.1.4"

@@ -55,7 +55,7 @@ const PickerMain = styled.div`
 `;
 
 const Button = styled.div`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   border-radius: 4px;
   padding: 4px;
   margin: 2px 2px;

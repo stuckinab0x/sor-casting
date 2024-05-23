@@ -25,7 +25,7 @@ interface ButtonMainProps {
 
 const ButtonMain = styled.div<ButtonMainProps>`
   display: flex;
-  background-color: ${ props => props.$highlighted ? 'orange' : props.theme.colors.bgInner3 };
+  background-color: ${ props => props.$highlighted ? props.theme.colors.accent : props.theme.colors.bgInner3 };
   padding: 5px 10px;
   margin: 2px;
   border-radius: 2px;

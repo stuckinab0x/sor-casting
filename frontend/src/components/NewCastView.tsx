@@ -1,11 +1,13 @@
 import { FC, SetStateAction, useCallback, useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
-import Student from '../models/student';
 import InputUpdate from '../models/input-update';
 import { createInputs } from '../utils';
 import { useProfile } from '../contexts/profile-context';
 import { useViews } from '../contexts/views-context';
+import { MainInstrument } from '../models/student';
+
+const mapInputs = (inputs: InputUpdate[], main: MainInstrument) => inputs.map(x => ({ name: x.value.trim(), main, castings: [], }));
 
 const NewCastView: FC = () => {
   const { setUnsavedData } = useProfile();
@@ -31,12 +33,7 @@ const NewCastView: FC = () => {
   }, [])
 
   const potentialCastList = useMemo(() => {
-    const guitar: Student[] = guitarInputs.map(x => ({ name: x.value.trim(), main: 'Guitar', castings: [], }));
-    const bass: Student[] = bassInputs.map(x => ({ name: x.value.trim(), main: 'Bass', castings: [], }));
-    const drums: Student[] = drumInputs.map(x => ({ name: x.value.trim(), main: 'Drums', castings: [], }));
-    const keys: Student[] = keysInputs.map(x => ({ name: x.value.trim(), main: 'Keys', castings: [], }));
-    const vox: Student[] = voxInputs.map(x => ({ name: x.value.trim(), main: 'Vocals', castings: [], }));
-    return [...guitar, ...bass, ...drums, ...keys, ...vox].filter(x => x.name);
+    return [...mapInputs(guitarInputs, 'Guitar'), ...mapInputs(bassInputs, 'Bass'), ...mapInputs(drumInputs, 'Drums'), ...mapInputs(keysInputs, 'Keys'), ...mapInputs(voxInputs, 'Vocals')].filter(x => x.name);
   }, [guitarInputs, bassInputs, drumInputs, keysInputs, voxInputs]);
 
   const buttonText = useMemo(() => {
@@ -64,6 +61,14 @@ const NewCastView: FC = () => {
     setUnsavedData(true);
   }, [potentialCastList, currentEditingShow, newShowStatus, setNewShowStatus, setEditorView, setCurrentEditingShow, setUnsavedData])
 
+  const instrumentSectionProps = useMemo(() => [
+    { instName: 'Guitar', inputs: guitarInputs, setter: setGuitarInputs },
+    { instName: 'Bass', inputs: bassInputs, setter: setBassInputs },
+    { instName: 'Drums', inputs: drumInputs, setter: setDrumInputs },
+    { instName: 'Keys', inputs: keysInputs, setter: setKeysInputs },
+    { instName: 'Vocals', inputs: voxInputs, setter: setVoxInputs },
+  ], [guitarInputs, bassInputs, drumInputs, keysInputs, voxInputs])
+
   if (currentEditingShow)
     return (
       <ViewMain>
@@ -73,61 +78,17 @@ const NewCastView: FC = () => {
         <h4><i>Add students to the cast list.<br />
         Instrument groups will help with organization later<br/>
         and don't affect song casting possibilities.</i></h4>
-        <InstrumentSection>
+        { instrumentSectionProps.map(x => (<InstrumentSection key={ x.instName }>
           <InstrumentHeader>
-            <h3>Guitar</h3>
+            <h3>{ x.instName }</h3>
           </InstrumentHeader>
-          { guitarInputs.map((x, i) => <input type='text' key={ x.id } value={ x.value } onChange={ event => handleInputChange(i, event.currentTarget, setGuitarInputs) } />) }
-          <AddButton  onClick={ () => addAnotherInput(setGuitarInputs) }>
+          { x.inputs.map((input, i) => <input type='text' key={ input.id } value={ input.value } onChange={ event => handleInputChange(i, event.currentTarget, x.setter) } />) }
+          <AddButton  onClick={ () => addAnotherInput(x.setter) }>
             <h3>
               More
             </h3>
           </AddButton>
-        </InstrumentSection>
-        <InstrumentSection>
-          <InstrumentHeader>
-            <h3>Bass</h3>
-          </InstrumentHeader>
-          { bassInputs.map((x, i) => <input type='text' key={ x.id } value={ x.value } onChange={ event => handleInputChange(i, event.currentTarget, setBassInputs) } />) }
-          <AddButton onClick={ () => addAnotherInput(setBassInputs) }>
-            <h3>
-              More
-            </h3>
-          </AddButton>
-        </InstrumentSection>
-        <InstrumentSection>
-          <InstrumentHeader>
-            <h3>Drums</h3>
-          </InstrumentHeader>
-          { drumInputs.map((x, i) => <input type='text' key={ x.id } value={ x.value } onChange={ event => handleInputChange(i, event.currentTarget, setDrumInputs) } />) }
-          <AddButton  onClick={ () => addAnotherInput(setDrumInputs) }>
-            <h3>
-              More
-            </h3>
-          </AddButton>
-        </InstrumentSection>
-        <InstrumentSection>
-          <InstrumentHeader>
-            <h3>Keys</h3>
-          </InstrumentHeader>
-          { keysInputs.map((x, i) => <input type='text' key={ x.id } value={ x.value } onChange={ event => handleInputChange(i, event.currentTarget, setKeysInputs) } />) }
-          <AddButton  onClick={ () => addAnotherInput(setKeysInputs) }>
-            <h3>
-              More
-            </h3>
-          </AddButton>
-        </InstrumentSection>
-        <InstrumentSection>
-          <InstrumentHeader>
-            <h3>Vocals</h3>
-          </InstrumentHeader>
-          { voxInputs.map((x, i) => <input type='text' key={ x.id } value={ x.value } onChange={ event => handleInputChange(i, event.currentTarget, setVoxInputs) } />) }
-          <AddButton onClick={ () => addAnotherInput(setVoxInputs) }>
-            <h3>
-              More
-            </h3>
-          </AddButton>
-        </InstrumentSection>
+        </InstrumentSection>)) }
         <DoneButton onClick={ addCast } $disabled={ buttonText === 'Fix duplicate names' }>
           <h3>
             { buttonText }
@@ -183,7 +144,7 @@ const InstrumentHeader = styled.div`
 `;
 
 const AddButton = styled.div`
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   border-radius: 4px;
   padding: 4px;
   margin: 2px 2px;

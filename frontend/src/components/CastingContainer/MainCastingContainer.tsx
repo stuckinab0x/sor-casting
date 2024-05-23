@@ -80,7 +80,7 @@ const SetListDivider= styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   margin: 2px;
   border-radius: 4px;
   min-height: 20px;

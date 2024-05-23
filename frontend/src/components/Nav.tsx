@@ -47,7 +47,7 @@ const NavMain = styled.div`
     align-items: center;
 
     > h1 {
-      color: orange;
+      color: ${ props => props.theme.colors.accent };
     }
   }
 `;
@@ -56,7 +56,7 @@ const ProfileName = styled.h1`
   color: white;
   margin-right: 10px;
   cursor: pointer;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   padding: 2px 12px;
   border-radius: 6px;
   box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.5);
@@ -65,7 +65,7 @@ const ProfileName = styled.h1`
 
 const Button = styled.div`
   display: flex;
-  background-color: orange;
+  background-color: ${ props => props.theme.colors.accent };
   align-items: center;
   justify-content: center;
   border-radius: 4px;
@@ -93,7 +93,7 @@ const SaveButton = styled(Button)`
     }
 
     50% {
-      background-color: orange;
+      background-color: ${ props => props.theme.colors.accent };
     }
 
     100% {

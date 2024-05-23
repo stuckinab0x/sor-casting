@@ -7,6 +7,24 @@ on:
     branches:
       - master
 jobs:
+  migrate-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup NodeJS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+      - name: Install dependencies
+        run: yarn --pure-lockfile
+      - name: Run migrations
+        working-directory: mongo-migrate
+        run: yarn run up
+        env:
+          MIGRATIONS_CONNECTION_URI: ${{ secrets.MIGRATIONS_CONNECTION_URI }}
+  
   build:
     runs-on: ubuntu-latest
     steps:
@@ -15,7 +33,7 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: yarn
       - name: Install dependencies
         run: yarn --frozen-lockfile
@@ -30,8 +48,6 @@ jobs:
     if: github.ref_name == 'master'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
