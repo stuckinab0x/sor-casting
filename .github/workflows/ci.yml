@@ -8,6 +8,7 @@ on:
       - master
 jobs:
   migrate-database:
+    if: github.ref_name == 'master'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: yarn --pure-lockfile
       - name: Run migrations
-        working-directory: mongo-migrate
+        working-directory: migrate-mongo
         run: yarn run up
         env:
           MIGRATIONS_CONNECTION_URI: ${{ secrets.MIGRATIONS_CONNECTION_URI }}
