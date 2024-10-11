@@ -5,14 +5,10 @@ import NewSongsView from './NewSongsView';
 import ShowOverview from './ShowOverview';
 import WelcomeScreen from './WelcomeScreen';
 import CastMemberView from './CastMemberView';
-import ProfilesView from './ProfilesView';
 import { useViews } from '../contexts/views-context';
 
 const EditorView: FC = () => {
   const { editorView } = useViews();
-  
-  if (editorView === 'profiles')
-    return <ProfilesView />;
 
   if (editorView === 'welcome')
     return <WelcomeScreen />;

@@ -5,7 +5,7 @@ import { useProfile } from '../contexts/profile-context';
 import { useViews } from '../contexts/views-context';
 
 const Nav: FC = () => {
-  const { profile, unsavedData, saveShowRequest } = useProfile();
+  const { unsavedData } = useProfile();
   const { setEditorView } = useViews();
   const { currentEditingShow } = useEditor();
 
@@ -19,12 +19,11 @@ const Nav: FC = () => {
           </Button>
         }
         { unsavedData && currentEditingShow && 
-        <SaveButton onClick={ () => saveShowRequest(currentEditingShow) }>
-          <h3>Save Changes</h3>
-        </SaveButton>
+          <SaveButton onClick={ () => null }>
+            <h3>Save Changes</h3>
+          </SaveButton>
         }
       </div>
-      { profile && <ProfileName onClick={ () => setEditorView('profiles') }>Profile: { profile }</ProfileName> }
     </NavMain>
     )
 }
@@ -50,17 +49,6 @@ const NavMain = styled.div`
       color: ${ props => props.theme.colors.accent };
     }
   }
-`;
-
-const ProfileName = styled.h1`
-  color: white;
-  margin-right: 10px;
-  cursor: pointer;
-  background-color: ${ props => props.theme.colors.accent };
-  padding: 2px 12px;
-  border-radius: 6px;
-  box-shadow: 1px 1px 4px 1px rgba(0, 0, 0, 0.5);
-  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 `;
 
 const Button = styled.div`

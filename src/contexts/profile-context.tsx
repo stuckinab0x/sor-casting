@@ -1,14 +1,18 @@
-import { FC, createContext, useContext, useCallback, useEffect, useState, ReactNode, useMemo, SetStateAction } from 'react';
+import { FC, createContext, useContext, useEffect, useState, ReactNode, useMemo, SetStateAction, useCallback } from 'react';
 import Prefs from '../models/prefs';
 import Show from '../models/show';
-import useGetProfile from '../hooks/use-get-profile';
 
+const getSavedShows = () => {
+  const loaded = localStorage.getItem('sor-casting-tool_shows');
+  if (loaded)
+    return JSON.parse(loaded) as Show[];
+  return undefined;
+}
 interface ProfileContextProps {
-  profile: string | undefined;
+  shows: Show[];
+  saveShows: (currentShow: Show) => void;
   prefs: Prefs | null;
   setPrefs: React.Dispatch<SetStateAction<Prefs | null>>;
-  setProfileRequest: (profileName: string) => void;
-  saveShowRequest: (currentEditingShow: Show) => Promise<void>;
   unsavedData: boolean;
   setUnsavedData: (unsaved: boolean) => void;
 }
@@ -31,22 +35,21 @@ interface ProfileProviderProps {
 }
 
 const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
-  const profile = useGetProfile();
+  const [shows, setShows] = useState<Show[]>(getSavedShows() || []);
 
   const [unsavedData, setUnsavedData] = useState(false);
-  
-  const saveShowRequest = useCallback(async (currentEditingShow: Show) => {
-    const res = await fetch('/api/shows', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentEditingShow),
+  const [prefs, setPrefs] = useState<Prefs | null>(null);
+
+  const saveShows = useCallback((currentShow: Show) => {
+    setShows(oldState => {
+     const oldShowIndex = oldState.findIndex(x => x.id === currentShow.id);
+
+     if (oldShowIndex >= 0)
+      return oldState.toSpliced(oldShowIndex, 1, currentShow)
+    return [...oldState, currentShow];
     });
 
-    if (res.status === 200)
-      setUnsavedData(false);
   }, []);
-
-  const [prefs, setPrefs] = useState<Prefs | null>(null);
 
   useEffect(() => {
     const storagePrefs = localStorage.getItem('prefs');
@@ -62,25 +65,22 @@ const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
     localStorage.setItem('prefs', JSON.stringify(prefs))
   }, [prefs]);
 
-  const setProfileRequest = useCallback(async (profileName: string) => {
-    await fetch(`/api/profiles/${ profileName }`, { method: 'PUT' });
-    location.reload();
-  }, []);
+  useEffect(() => {
+    localStorage.setItem('sor-casting-tool_shows', JSON.stringify(shows))
+  }, [shows]);
 
   const context = useMemo(() => ({
-    profile,
+    shows,
+    saveShows,
     prefs,
     setPrefs,
-    setProfileRequest,
-    saveShowRequest,
     unsavedData,
     setUnsavedData,
   }), [
-    profile,
+    shows,
+    saveShows,
     prefs,
     setPrefs,
-    setProfileRequest,
-    saveShowRequest,
     unsavedData,
     setUnsavedData,
   ]);

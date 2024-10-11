@@ -1,6 +1,5 @@
 import { FC, useState, createContext, useContext, ReactNode, useMemo, SetStateAction } from 'react';
 import EditorView from '../models/editor-view';
-import { useProfile } from './profile-context';
 
 interface ViewsContextProps {
   editorView: EditorView;
@@ -27,9 +26,8 @@ interface ViewsProviderProps {
 }
 
 const ViewsProvider: FC<ViewsProviderProps> = ({ children }) => {
-  const { profile } = useProfile();
 
-  const [editorView, setEditorView] = useState<EditorView>(profile ? 'welcome' : 'profiles');
+  const [editorView, setEditorView] = useState<EditorView>('welcome');
   const [toolsMode, setToolsMode] = useState(false);
 
   const context = useMemo(() => ({

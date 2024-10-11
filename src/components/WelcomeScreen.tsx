@@ -1,43 +1,23 @@
-import { FC, useState, useEffect, useCallback } from 'react';
+import { FC, useCallback } from 'react';
 import styled from 'styled-components';
 import { useEditor } from '../contexts/editor-context';
 import { useViews } from '../contexts/views-context';
-
-interface ShowNameAndId {
-  id: string;
-  name: string;
-}
+import { useProfile } from '../contexts/profile-context';
 
 const WelcomeScreen: FC = () => {
+  const { shows } = useProfile();
   const { setEditorView } = useViews();
   const { setCurrentEditingShow } = useEditor();
 
-  const [showNamesAndIds, setShowNamesAndIds] = useState<ShowNameAndId[] | undefined>();
+  const loadShow = useCallback(async (showId: string) => {
+    const show = shows.find(x => x.id === showId);
+    if (!show)
+      return;
 
-  useEffect(() => {
-    const requestShowNames = async () => {
-      try {
-        const res = await fetch('/api/shows');
-        const shows: ShowNameAndId[] = await res.json();
-          setShowNamesAndIds(shows);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-    requestShowNames();
-  }, []);
-
-  const loadShowRequest = useCallback(async (showId: string) => {
-    try {
-      const res = await fetch(`/api/shows/${ showId }`);
-      const show = await res.json();
-      
-      setCurrentEditingShow({ ...show, setSplitIndex: Number(show.setSplitIndex) });
-      setEditorView('showOverview');
-    } catch (error) {
-      console.log(error);
-    }
-  }, [setCurrentEditingShow, setEditorView]);
+    setCurrentEditingShow({ ...show, setSplitIndex: Number(show.setSplitIndex) });
+    setEditorView('showOverview');
+    
+  }, [setCurrentEditingShow, setEditorView, shows]);
 
 
   return (
@@ -45,8 +25,8 @@ const WelcomeScreen: FC = () => {
       <h1>
         Create/Edit Shows:
       </h1>
-      { showNamesAndIds && <ShowsList>
-        { showNamesAndIds.map(x => <Button key={ x.name } onClick={ () => loadShowRequest(x.id) }>
+      { shows.length && <ShowsList>
+        { shows.map(x => <Button key={ x.name } onClick={ () => loadShow(x.id) }>
           <h2>{ x.name }</h2>
         </Button>) }
       </ShowsList> }

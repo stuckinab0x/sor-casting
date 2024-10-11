@@ -2,7 +2,6 @@ import { FC, useState, createContext, useCallback, useContext, ReactNode, useMem
 import Show from '../models/show';
 import Student, { Casting, CastingInst, FivePMStartLesson, MainInstrument, TwoPMStartLesson } from '../models/student';
 import { useProfile } from './profile-context';
-import { v4 as uuidv4 } from 'uuid';
 import tileColors from '../tile-color';
 
 type NewShowStatus = 'songsWereAdded' | 'castWasAdded' | undefined;
@@ -73,7 +72,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
   
   const initializeShow = useCallback((showName: string, singleArtist: boolean, startsAtTwo: boolean) => {
     const newShow: Show = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name: showName.trim(),
       singleArtist,
       twoPmRehearsal: startsAtTwo,
@@ -166,7 +165,7 @@ const EditorProvider: FC<EditorProviderProps> = ({ children }) => {
     setCurrentEditingShow(oldState => {
       if (!oldState)
         return null;
-      return { ...oldState, songs: [...oldState.songs, { id: uuidv4(), name: songName, artist, color: availableColors[0] }] };
+      return { ...oldState, songs: [...oldState.songs, { id: crypto.randomUUID(), name: songName, artist, color: availableColors[0] }] };
     });
     setUnsavedData(true);
   }, [setUnsavedData, availableColors]);

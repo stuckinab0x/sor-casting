@@ -6,7 +6,6 @@ import { createInputs } from '../utils';
 import Song from '../models/song';
 import { useProfile } from '../contexts/profile-context';
 import { useViews } from '../contexts/views-context';
-import { v4 as uuidv4 } from 'uuid';
 
 const NewSongsView: FC = () => {
   const { setUnsavedData } = useProfile();
@@ -38,7 +37,7 @@ const NewSongsView: FC = () => {
   const addSongs = useCallback(() => {
     if (!currentEditingShow)
       return;
-    let songs: Song[] = songInputs.map((x, i) => ({ id: uuidv4(), name: x.value, artist: artistInputs[i].value, color: availableColors[i] })).filter(x => x.name);
+    let songs: Song[] = songInputs.map((x, i) => ({ id: crypto.randomUUID(), name: x.value, artist: artistInputs[i].value, color: availableColors[i] })).filter(x => x.name);
     if (currentEditingShow.singleArtist)
       songs = songs.map((x, i) => ({ id: x.id, name: x.name, order: i, color: availableColors[i] }))
     setCurrentEditingShow({ ...currentEditingShow, songs: [...songs] });
